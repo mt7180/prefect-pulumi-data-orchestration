@@ -11,8 +11,8 @@ class User(NamedTuple):
 
 def get_users() -> List[User]:
     """here you could connect to your database (local, AWS or any other)
-    but for the sake of simplicity in this example ony a pandas
-    DataFrame with one user is returned
+    but for the sake of simplicity in this example only a List
+    with one user is returned
     """
     return [User(
         name="test_user",
@@ -20,7 +20,7 @@ def get_users() -> List[User]:
     )]
 
 
-def mock_event_data() -> pd.DataFrame:
+def mock_event_data() -> str:
     cfd = pathlib.Path(__file__).parent
     with open(cfd / "test_data_gen.txt", 'r') as f:
         payload_str = f.read()
