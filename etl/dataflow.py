@@ -1,8 +1,4 @@
 
-# https://github.com/EnergieID/entsoe-py/blob/master/entsoe/entsoe.py
-# https://transparency.entsoe.eu/content/static_content/Static%20content/web%20api/Guide.html#_parameters
-# https://github.com/PrefectHQ/prefect-sqlalchemy/blob/main/tests/test_database.py
-
 import pathlib
 from prefect_email import EmailServerCredentials, email_send_message
 from prefect import task, flow
