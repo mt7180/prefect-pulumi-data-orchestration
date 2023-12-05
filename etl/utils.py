@@ -1,6 +1,5 @@
 import pathlib
-from prefect.blocks.system import Secret, String
-import pandas as pd
+from prefect.blocks.system import String
 from typing import NamedTuple, List
 
 
@@ -14,15 +13,16 @@ def get_users() -> List[User]:
     but for the sake of simplicity in this example only a List
     with one user is returned
     """
-    return [User(
-        name="test_user",
-        email=String.load("test-email").value,
-    )]
+    return [
+        User(
+            name="test_user",
+            email=String.load("test-email").value,
+        )
+    ]
 
 
 def mock_event_data() -> str:
     cfd = pathlib.Path(__file__).parent
-    with open(cfd / "test_data_gen.txt", 'r') as f:
+    with open(cfd / "mock_data.txt", "r") as f:
         payload_str = f.read()
     return payload_str
-
