@@ -5,3 +5,4 @@ env
 .env
 __pycache__/
 .DS_Store
+mock_data.txt
