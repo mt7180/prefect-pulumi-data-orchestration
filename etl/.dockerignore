@@ -1,0 +1,7 @@
+test*.*
+venv
+.venv
+env
+.env
+__pycache__/
+.DS_Store
