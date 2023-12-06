@@ -11,7 +11,7 @@ on:
         type: string
       pulumi-stack-name:
         required: true
-        default: '${{ github.actor }}/ecs-flow-infrastructure/dev'
+        default: 'acount-name/stack/dev'
         type: string
       ecr-repo-name:
         required: true
