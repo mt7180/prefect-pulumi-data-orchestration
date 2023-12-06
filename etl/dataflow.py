@@ -1,5 +1,5 @@
 import pathlib
-from typing import Dict, List
+from typing import Any, Dict, List
 from prefect_email import EmailServerCredentials, email_send_message
 from prefect import task, flow
 from prefect.blocks.system import Secret
@@ -29,26 +29,27 @@ def extract_installed_capacity() -> pd.DataFrame:
 
 
 @task(retries=3, retry_delay_seconds=60)
-def transform_data(
-    xml_str: str, installed_offshore_s: pd.DataFrame
-) -> Dict[str, pd.DataFrame]:
-    forecast_offshore_df = entsoe_generation_parser(xml_str)
+def transform_data(xml_str: str, installed_capacity_df: pd.DataFrame) -> Dict[str, Any]:
+    generation_forecast_df = entsoe_generation_parser(xml_str)
 
     # filter data
-    forecast_offshore_df = forecast_offshore_df.loc[
-        forecast_offshore_df.index.minute == 0
+    generation_forecast_df = generation_forecast_df.loc[
+        generation_forecast_df.index.minute == 0
     ]
-    column_name = forecast_offshore_df.columns[0]
+    generation_type = generation_forecast_df.columns[0]
     result_df = pd.DataFrame(
         data={
-            "forecast": forecast_offshore_df[column_name],
-            "installed": installed_offshore_s.iloc[0],
+            "forecast": generation_forecast_df[generation_type],
+            "installed": installed_capacity_df.get(
+                generation_type, default=pd.Series()
+            ).iloc[0],
         },
-        index=forecast_offshore_df.index,
+        index=generation_forecast_df.index,
     )
+    # result_df.name = generation_type
 
     chart_data = []
-    print("Intraday Generation Forecasts Wind Offshore")
+    # print("Intraday Generation Forecasts Wind Offshore")
     for index, row in result_df.iterrows():
         percentage = int(row["forecast"] / row["installed"] * 100)
         chart_data.append(
@@ -56,10 +57,11 @@ def transform_data(
             f"  => {percentage}% ({row['forecast']}MW/{row['installed']}MW)"
         )
 
-    return {"chart": "<br>".join(chart_data), "df": result_df}
+    return {"chart": "<br>".join(chart_data), "df": result_df, "title": generation_type}
 
 
-def send_newsletters(data: pd.DataFrame) -> None:
+@flow
+def send_newsletters(data: Dict[str, Any]) -> None:
     """in this example the data won't be loaded into a database,
     but will be sent to registered users
     """
@@ -69,11 +71,11 @@ def send_newsletters(data: pd.DataFrame) -> None:
     for user in users:
         line1 = f"Hello {user.name}, <br>"
         line2 = "Please find our lastest update on: <br><br>"
-        line3 = "<h1>Intraday Generation Forecasts Wind Offshore:</h1>"
+        line3 = f"<h1>Intraday Generation (Forecasts) and  Installed Capacity for Generation Type: {data['title']}</h1>"
         # this is a prefect task:
         email_send_message.with_options(name="send-user-newsletter").submit(
             email_server_credentials=email_server_credentials,
-            subject="Newsletter: Intraday Generation Forecasts Wind Offshore",
+            subject=f"Newsletter: Intraday Generation: {data['title']}",
             msg=line1
             + line2
             + line3
@@ -87,15 +89,14 @@ def send_newsletters(data: pd.DataFrame) -> None:
 @flow
 def data_flow(event_msg: str) -> None:
     event_payload = extract_event_payload(event_msg)
-    installed_capacity_offshore = extract_installed_capacity().get(
-        "Wind Offshore", default=pd.Series()
-    )
-    data = transform_data(event_payload, installed_capacity_offshore)
+    installed_capacity = extract_installed_capacity()
+    data = transform_data(event_payload, installed_capacity)
     send_newsletters(data)
 
 
 if __name__ == "__main__":
-    LOCAL = True
+    LOCAL = False
+
     ## 1. test with mocked event data and run locally without deployment
     if LOCAL:
         data_flow(mock_event_data())
@@ -122,6 +123,7 @@ if __name__ == "__main__":
         import os
         from dotenv import load_dotenv
         from prefect.deployments.runner import DeploymentImage
+        from prefect.flows import DeploymentTrigger
 
         cfd = pathlib.Path(__file__).parent
 
@@ -141,14 +143,20 @@ if __name__ == "__main__":
                 "task_role_arn": os.getenv("TASK_ROLE", ""),
                 "cluster": os.getenv("ECS_CLUSTER"),
                 "vpc_id": os.getenv("VPC_ID", ""),
-                "container_name": "newsletter-flow_ecr-f66b601",
+                "container_name": os.getenv("ECR_REPO_NAME", ""),
                 "family": "newsletter-flow",
             },
             image=DeploymentImage(
-                name=os.getenv("IMAGE_NAME", ""),
+                name=os.getenv("ECR_REPO_URL", ""),
                 tag=os.getenv("IMAGE_TAG"),
                 dockerfile=cfd / "Dockerfile",
             ),
             build=True,
             push=True,
+            triggers=[
+                DeploymentTrigger(
+                    match={"prefect.resource.id": "entsoe-msg-webhook-id"},
+                    parameters={"event_msg": "{{ event.payload.body }}"},
+                )
+            ],
         )

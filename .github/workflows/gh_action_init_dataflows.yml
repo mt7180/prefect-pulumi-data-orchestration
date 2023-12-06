@@ -1,0 +1,122 @@
+name: Create Infrastructure and Deploy Prefect to AWS ECS Push Work Pool
+run-name: Dataflow Initialization triggered by @${{ github.actor }}
+on:
+  workflow_dispatch:
+    inputs:
+      aws_region:
+        description: Desired region for AWS resources
+        required: true
+        default: 'eu-central-1'
+        type: string
+
+jobs:
+  create-aws-infrastructure:
+    name: Create AWS Infrastructure
+    runs-on: ubuntu-latest
+    outputs:
+      aws_ecs_cluster_arn: ${{ steps.pulumi.outputs.ecs_cluster_arn }}
+      aws_vpc_id: ${{ steps.pulumi.outputs.vpc_id }}
+      aws_task_role_arn: ${{ steps.pulumi.outputs.iam_task_role_arn }}
+      aws_execution_role_arn: ${{ steps.pulumi.outputs.iam_execution_role_arn }}
+      aws_ecr_url : ${{ steps.pulumi.outputs.ecr_repo_url}}
+      aws_ecr_name: ${{ steps.pulumi.outputs.ecr_repo_name}}
+    defaults:
+      run:
+        working-directory: ./infrastructure
+    steps:
+      - name: Code Checkout
+        uses: actions/checkout@v3
+
+      - name: Send Information to Summary
+        run: echo "### Workflow $GITHUB_WORKFLOW with GITHUB_SHA $GITHUB_SHA" >> $GITHUB_STEP_SUMMARY
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.10'
+
+      - name: Install Pulumi Dependencies
+        run: |
+            python -m pip install --upgrade pip
+            pip install -r requirements.txt
+
+      - name: Set AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ github.event.inputs.AWS_REGION }}
+
+      - name: Create Infrastructure with Pulumi
+        id: pulumi
+        uses: pulumi/actions@v3
+        with:
+          command: up
+          stack-name: ${{ github.actor }}/ecs-flow-infrastructure/dev
+          work-dir: ./infrastructure
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+
+      - run: |
+          echo "Current AWS ECR Repository: ${{ steps.pulumi.outputs.ecr_repo_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "Current AWS ECS Cluster arn: ${{ steps.pulumi.outputs.ecs_cluster_arn }}" >> $GITHUB_STEP_SUMMARY
+          echo "Current AWS VPC id: ${{ steps.pulumi.outputs.vpc_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "Current AWS iam task role arn: ${{ steps.pulumi.outputs.iam_task_role_arn }}" >> $GITHUB_STEP_SUMMARY
+          echo "Current AWS iam execution role arn ${{ steps.pulumi.outputs.iam_execution_role_arn }}" >> $GITHUB_STEP_SUMMARY
+          
+
+      - name: Create AWS Infrastructure Summary
+        run: echo "AWS Infrastructure build at $(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_STEP_SUMMARY
+
+
+  deploy-prefect-dataflow:
+    name: Deploy Flow to Prefect Push Workpool and push image to AWS ECR Repo
+    runs-on: ubuntu-latest
+    needs: create-aws-infrastructure
+    steps:
+      - name: Code Checkout
+        uses: actions/checkout@v3
+    
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+    
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r etl/requirements.txt
+
+      - name: Set AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ github.event.inputs.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+  
+
+      - name: Prefect Auth
+        uses: PrefectHQ/actions-prefect-auth@v1
+        with:
+          prefect-api-key: ${{ secrets.PREFECT_API_KEY }}
+          prefect-workspace: ${{ secrets.PREFECT_WORKSPACE }}
+
+      - name: Deploy Flow
+        run: |
+          prefect cloud webhook create entsoe-msg-webhook \
+            --template '{ "event": "entsoe-event", "resource": { "prefect.resource.id": "entsoe-msg-webhook-id" } }'
+          python -m etl.dataflow
+        env:
+          ECR_REPO_URL: ${{ needs.create-aws-infrastructure.outputs.aws_ecr_url}}
+          ECR_REPO_NAME: ${{ needs.create-aws-infrastructure.outputs.aws_ecr_name}} 
+          IMAGE_TAG: ${{ github.sha }}
+          EXECUTION_ROLE: ${{ needs.create-aws-infrastructure.outputs.aws_execution_role_arn }}
+          TASK_ROLE: ${{ needs.create-aws-infrastructure.outputs.aws_task_role_arn }}
+          ECS_CLUSTER: ${{ needs.create-aws-infrastructure.outputs.aws_ecs_cluster_arn }}
+          VPC_ID: ${{ needs.create-aws-infrastructure.outputs.aws_vpc_id }}
+
+      - name: Summary
+        run: echo '### AWS infrastructure and flow successfully deployed! :rocket:' >> $GITHUB_STEP_SUMMARY

@@ -1,0 +1,70 @@
+
+name: Delete Flow Image in ECR Repo and AWS Infrastructure
+run-name: Remove Dataflow triggered by @${{ github.actor }}
+on:
+  workflow_dispatch:
+    inputs:
+      aws_region:
+        description: Desired region for AWS resources
+        required: true
+        default: 'eu-central-1'
+        type: string
+      pulumi-stack-name:
+        required: true
+        default: '${{ github.actor }}/ecs-flow-infrastructure/dev'
+        type: string
+      ecr-repo-name:
+        required: true
+        default: 'dataflow_ecr-bc9d38b'
+        type: string
+      flow-image-tag:
+        description: Image tag of the deployed flow in the ECR repository, which should be deleted
+        required: true
+        default: 'please find git_sha from gh_action_init_dataflow action summary'
+        type: string
+
+jobs:
+  create-aws-infrastructure:
+    name: Create AWS Infrastructure
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./infrastructure
+    steps:
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.10'
+
+    - name: Install Pulumi Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Set AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ github.event.inputs.AWS_REGION }}
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Delete deployed image in ECR repo
+      run: |
+        aws ecr batch-delete-image \
+        --repository-name ${{ github.event.inputs.ECR-REPO-NAME }} \
+        --image-ids imageTag=${{ github.event.inputs.FLOW-IMAGE-TAG}}
+  
+
+    - name: Delete Infrastructure with Pulumi
+      id: pulumi
+      uses: pulumi/actions@v3
+      with:
+        command: destroy
+        stack-name: ${{ github.event.inputs.PULUMI-STACK-NAME }}
+        work-dir: ./infrastructure
+      env:
+        PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
