@@ -28,9 +28,10 @@ jobs:
     name: Delete Flow Image and AWS Infrastructure
     runs-on: ubuntu-latest
     steps:
+
     - name: Code Checkout 
       uses: actions/checkout@v3
-      
+
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
@@ -58,6 +59,12 @@ jobs:
         aws ecr batch-delete-image \
         --repository-name ${{ github.event.inputs.ecr-repo-name }} \
         --image-ids imageTag=${{ github.event.inputs.flow-image-tag}}
+
+       # delete all images in ecr repo:
+        # aws ecr batch-delete-image \
+        # --repository-name ${{ github.event.inputs.ecr-repo-name }} \
+        # --image-ids "$(aws ecr list-images --repository-name ${{ github.event.inputs.ecr-repo-name }} \
+        # --query 'imageIds[*]' --output json )" || true
   
 
     - name: Delete Infrastructure with Pulumi
