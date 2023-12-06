@@ -118,7 +118,7 @@ jobs:
           ECS_CLUSTER: ${{ needs.create-aws-infrastructure.outputs.aws_ecs_cluster_arn }}
           VPC_ID: ${{ needs.create-aws-infrastructure.outputs.aws_vpc_id }}
 
-      - name: Let's test our automated dataflow by sending an event
+      - name: Let's test our automated dataflow by sending a test event
         run: python -m etl.emit_event
 
       - name: Summary

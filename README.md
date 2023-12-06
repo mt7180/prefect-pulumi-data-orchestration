@@ -5,9 +5,13 @@
 ---
 
 ## Prerequisits
-1. Sign up for Prefect Cloud and create a workspace and push aws:ecs push workpool (todo: implement in gh action)
+1. Sign up for Prefect Cloud and create a workspace and aws:ecs push workpool (todo: implement in gh action)
 2. Sign up for AWS and assign the necessary permissions to your IAM user (todo: give list of policies for ECR, ECS ...) 
 3. Sign up for the entsoe transparency platform and ask for Restful API access and Data Consumer subscription for private use (todo: put link)
+4. Add the following secrets to your github repo action secrets: AWS_ACCESS_KEY, AWS_SECRET_ACCESS_KEY, PULUMI_ACCESS_TOKEN, PREFECT_API_KEY, PREFECT_WORKSPACE (todo: explain where and how to get them)
+5. Add the entsoe-api-key to a Secret-Block in Prefect UI (could be included in gh action)
+6. Add Email-Credentials to Prefect Block
+7. Add test-user email to Prefect String-Block or use own database
 
 ## Details
 1. Deploy necessary AWS infrastructure and prefect flow with one click on Github with Github Action: gh_action_init_dataflow.yaml. This will trigger the following:
@@ -26,3 +30,4 @@
 - https://transparency.entsoe.eu/
 - https://docs.prefect.io/latest/
 - https://www.pulumi.com
+- https://annageller.medium.com/serverless-real-time-data-pipelines-on-aws-with-prefect-ecs-and-github-actions-1737c80da3f5#655e
