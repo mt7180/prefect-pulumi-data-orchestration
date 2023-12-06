@@ -25,11 +25,8 @@ on:
 
 jobs:
   delete-aws-infrastructure:
-    name: Delete AWS Infrastructure
+    name: Delete Flow Image and AWS Infrastructure
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: infrastructure
     steps:
     - name: Set up Python
       uses: actions/setup-python@v2
@@ -40,6 +37,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+      working-directory: infrastructure
 
     - name: Set AWS Credentials
       uses: aws-actions/configure-aws-credentials@v4
