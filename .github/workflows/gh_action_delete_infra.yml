@@ -24,12 +24,12 @@ on:
         type: string
 
 jobs:
-  create-aws-infrastructure:
-    name: Create AWS Infrastructure
+  delete-aws-infrastructure:
+    name: Delete AWS Infrastructure
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./infrastructure
+        working-directory: infrastructure
     steps:
     - name: Set up Python
       uses: actions/setup-python@v2
@@ -65,6 +65,6 @@ jobs:
       with:
         command: destroy
         stack-name: ${{ github.event.inputs.pulumi-stack-name }}
-        work-dir: ./infrastructure
+        work-dir: infrastructure
       env:
         PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
