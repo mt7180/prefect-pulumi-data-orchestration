@@ -46,7 +46,7 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ github.event.inputs.AWS_REGION }}
+        aws-region: ${{ github.event.inputs.aws_region }}
 
     - name: Login to Amazon ECR
       id: login-ecr
@@ -55,8 +55,8 @@ jobs:
     - name: Delete deployed image in ECR repo
       run: |
         aws ecr batch-delete-image \
-        --repository-name ${{ github.event.inputs.ECR-REPO-NAME }} \
-        --image-ids imageTag=${{ github.event.inputs.FLOW-IMAGE-TAG}}
+        --repository-name ${{ github.event.inputs.ecr-repo-name }} \
+        --image-ids imageTag=${{ github.event.inputs.flow-image-tag}}
   
 
     - name: Delete Infrastructure with Pulumi
@@ -64,7 +64,7 @@ jobs:
       uses: pulumi/actions@v3
       with:
         command: destroy
-        stack-name: ${{ github.event.inputs.PULUMI-STACK-NAME }}
+        stack-name: ${{ github.event.inputs.pulumi-stack-name }}
         work-dir: ./infrastructure
       env:
         PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
