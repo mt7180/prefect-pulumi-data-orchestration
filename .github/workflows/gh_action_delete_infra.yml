@@ -28,6 +28,9 @@ jobs:
     name: Delete Flow Image and AWS Infrastructure
     runs-on: ubuntu-latest
     steps:
+    - name: Code Checkout 
+      uses: actions/checkout@v3
+      
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
