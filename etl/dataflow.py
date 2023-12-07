@@ -1,3 +1,4 @@
+from enum import Enum
 import pathlib
 from typing import Any, Dict, List
 from prefect_email import EmailServerCredentials, email_send_message
@@ -46,10 +47,8 @@ def transform_data(xml_str: str, installed_capacity_df: pd.DataFrame) -> Dict[st
         },
         index=generation_forecast_df.index,
     )
-    # result_df.name = generation_type
 
     chart_data = []
-    # print("Intraday Generation Forecasts Wind Offshore")
     for index, row in result_df.iterrows():
         percentage = int(row["forecast"] / row["installed"] * 100)
         chart_data.append(
@@ -95,31 +94,25 @@ def data_flow(event_msg: str) -> None:
 
 
 if __name__ == "__main__":
-    LOCAL = False
+    DeployModes = Enum(
+        "DeployModes",
+        [
+            "LOCAL_TEST",
+            "LOCAL_DOCKER_TEST",
+            "ECS_PUSH_WORK_POOL",
+            "ECS_PUSH_WITH_INFRA_PROVINIONING",
+        ],
+    )
 
-    ## 1. test with mocked event data and run locally without deployment
-    if LOCAL:
+    ### Set your preferred flow run/ deployment mode:
+    deploy_mode = DeployModes.ECS_PUSH_WORK_POOL
+    ###
+
+    if deploy_mode == DeployModes.LOCAL_TEST:
+        ## test flow with mocked event data and run locally without deployment:
         data_flow(mock_event_data())
 
-    ## 2. test by running locally in a docker container, put event data manually via quick run in ui
-    # from prefect.deployments.runner  import DeploymentImage
-    # cfd = pathlib.Path(__file__).parent
-
-    # data_flow.deploy(
-    #     "deploy_dataflow_ecs_push",
-    #     # work_pool_name="Miras-push-workpool-2",
-    #     work_pool_name="newsletter_docker_workpool",
-    #     image=DeploymentImage(
-    #         name="newsletter-flow_local",
-    #         tag="test",
-    #         dockerfile=cfd / "Dockerfile",
-    #     ),
-    #     build=True,
-    #     push=False,
-    # )
-
     else:
-        # 3. if everything works, push image to ecr and deploy to push work pool
         import os
         from dotenv import load_dotenv
         from prefect.deployments.runner import DeploymentImage
@@ -129,34 +122,61 @@ if __name__ == "__main__":
 
         load_dotenv(override=True)
 
-        # 3.a: go into infrastructure folder and execute command: pulumi up
-        # 3.b: put pulumi output to .env file
+        job_variables: Dict[str, Any] = {}
+        triggers: List[DeploymentTrigger] = []
 
-        # 3.c: You need to authenticate to aws ecr first:
-        # aws ecr get-login-password --region region | docker login --username AWS --password-stdin aws_account_id.dkr.ecr.region.amazonaws.com
-        # replace: aws_account_id and region
-        data_flow.deploy(
-            "deploy_dataflow_ecs_push",
-            work_pool_name="Miras-push-workpool-2",
-            job_variables={
+        if deploy_mode == DeployModes.LOCAL_DOCKER_TEST:
+            ## test flow docker deployment locally and initiate quick run in prefect cloud ui:
+            push = False
+
+        elif deploy_mode == DeployModes.ECS_PUSH_WITH_INFRA_PROVINIONING:
+            ## ecs:push deploy mode, prefect provisions the infrastructure
+            ## -> not working, yet
+
+            # you can also set an automation here, if you want
+            # triggers = {}
+            push = True
+
+        elif deploy_mode == DeployModes.ECS_PUSH_WORK_POOL:
+            # provision work pool with information about your AWS infrastructure
+            job_variables = {
                 "execution_role_arn": os.getenv("EXECUTION_ROLE", ""),
                 "task_role_arn": os.getenv("TASK_ROLE", ""),
                 "cluster": os.getenv("ECS_CLUSTER"),
                 "vpc_id": os.getenv("VPC_ID", ""),
                 "container_name": os.getenv("ECR_REPO_NAME", ""),
-                "family": "newsletter-flow",
-            },
+                "family": "prefect-flow",  # newsletter
+                "aws_credentials": {
+                    "$ref": {
+                        "block_document_id": os.getenv("AWS_CREDENTIAL_BLOCK_ID", "")
+                    }
+                },
+            }
+            # create an automation, you may want to rename the corresponding webhook:
+            triggers = [
+                DeploymentTrigger(
+                    match={"prefect.resource.id": "entsoe-msg-webhook-id"},
+                    parameters={"event_msg": "{{ event.payload.body }}"},
+                )
+            ]
+            push = True
+            # note the following deployment procedure (same as in gh action):
+            # 1: go into infrastructure folder and execute command: pulumi up
+            # 2: put pulumi output to .env file
+            # 3: authenticate to aws ecr before executing the deployment:
+            #    replace: aws_account_id and region
+            #    aws ecr get-login-password --region region | docker login --username AWS --password-stdin aws_account_id.dkr.ecr.region.amazonaws.com
+
+        data_flow.deploy(
+            "deploy_dataflow_air-to-air_push",
+            work_pool_name="air-to-air_push",
+            job_variables=job_variables,
             image=DeploymentImage(
                 name=os.getenv("ECR_REPO_URL", ""),
                 tag=os.getenv("IMAGE_TAG"),
                 dockerfile=cfd / "Dockerfile",
             ),
             build=True,
-            push=True,
-            triggers=[
-                DeploymentTrigger(
-                    match={"prefect.resource.id": "entsoe-msg-webhook-id"},
-                    parameters={"event_msg": "{{ event.payload.body }}"},
-                )
-            ],
+            push=push,
+            triggers=triggers,
         )

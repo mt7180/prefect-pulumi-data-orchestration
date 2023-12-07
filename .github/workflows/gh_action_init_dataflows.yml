@@ -104,6 +104,10 @@ jobs:
           prefect-api-key: ${{ secrets.PREFECT_API_KEY }}
           prefect-workspace: ${{ secrets.PREFECT_WORKSPACE }}
 
+      - name: Create Prefect AWS ECS Push Workpool
+        run: |
+          prefect work-pool create --type ecs:push air-to-air_push
+
       - name: Deploy Flow
         run: |
           prefect cloud webhook create entsoe-msg-webhook \
