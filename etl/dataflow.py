@@ -122,19 +122,20 @@ if __name__ == "__main__":
 
         load_dotenv(override=True)
 
-        job_variables: Dict[str, Any] = {}
-        triggers: List[DeploymentTrigger] = []
+        job_variables: Dict[str, Any] | None = None
+        triggers: List[DeploymentTrigger] | None = None
 
         if deploy_mode == DeployModes.LOCAL_DOCKER_TEST:
             ## test flow docker deployment locally and initiate quick run in prefect cloud ui:
             push = False
 
         elif deploy_mode == DeployModes.ECS_PUSH_WITH_INFRA_PROVINIONING:
-            ## ecs:push deploy mode, prefect provisions the infrastructure
+            ## deploy to ecs:push workpool with --provision-infra mode,
+            ## infrastructure is provisioned by prefect, no job variables here
             ## -> not working, yet
 
             # you can also set an automation here, if you want
-            # triggers = {}
+            # triggers = []
             push = True
 
         elif deploy_mode == DeployModes.ECS_PUSH_WORK_POOL:

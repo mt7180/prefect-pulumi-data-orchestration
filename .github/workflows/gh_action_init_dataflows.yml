@@ -8,6 +8,12 @@ on:
         required: true
         default: 'eu-central-1'
         type: string
+      aws_credential_block_id:
+        description: The id of your AWS Credential Block, find it in Prefect Cluod UI
+        required: true
+        default: ''
+        type: string
+
 
 jobs:
   create-aws-infrastructure:
@@ -107,6 +113,7 @@ jobs:
       - name: Create Prefect AWS ECS Push Workpool
         run: |
           prefect work-pool create --type ecs:push air-to-air_push
+        continue-on-error: true # if work pool already exists
 
       - name: Deploy Flow
         run: |
@@ -121,6 +128,7 @@ jobs:
           TASK_ROLE: ${{ needs.create-aws-infrastructure.outputs.aws_task_role_arn }}
           ECS_CLUSTER: ${{ needs.create-aws-infrastructure.outputs.aws_ecs_cluster_arn }}
           VPC_ID: ${{ needs.create-aws-infrastructure.outputs.aws_vpc_id }}
+          AWS_CREDENTIAL_BLOCK_ID: ${{ github.event.inputs.aws_credential_block_id }}
 
       - name: Let's test our automated dataflow by sending a test event
         run: python -m etl.emit_event
