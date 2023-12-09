@@ -9,18 +9,10 @@ on:
         required: true
         default: 'eu-central-1'
         type: string
-      pulumi-stack-name:
-        required: true
-        default: 'acount-name/stack/dev'
-        type: string
       ecr-repo-name:
         required: true
-        default: 'dataflow_ecr-bc9d38b'
-        type: string
-      flow-image-tag:
-        description: Image tag of the deployed flow in the ECR repository, which should be deleted
-        required: true
-        default: 'please find git_sha from gh_action_init_dataflow action summary'
+        description: name of the ecr repo to be deleted. Note- All immages in the repo will be deleted!
+        default: 'dataflow_ecr'
         type: string
 
 jobs:
@@ -54,25 +46,24 @@ jobs:
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
 
-    - name: Delete deployed image in ECR repo
+    - name: Delete all images in specified ECR repo
       run: |
         aws ecr batch-delete-image \
         --repository-name ${{ github.event.inputs.ecr-repo-name }} \
-        --image-ids imageTag=${{ github.event.inputs.flow-image-tag}}
+        --image-ids "$(aws ecr list-images --repository-name ${{ github.event.inputs.ecr-repo-name }} \
+        --query 'imageIds[*]' --output json )" || true
 
-       # delete all images in ecr repo:
-        # aws ecr batch-delete-image \
-        # --repository-name ${{ github.event.inputs.ecr-repo-name }} \
-        # --image-ids "$(aws ecr list-images --repository-name ${{ github.event.inputs.ecr-repo-name }} \
-        # --query 'imageIds[*]' --output json )" || true
-  
+      # option: delete only deployed image
+      # aws ecr batch-delete-image \
+      # --repository-name ${{ github.event.inputs.ecr-repo-name }} \
+      # --image-ids imageTag=${{ github.event.inputs.flow-image-tag}}
 
     - name: Delete Infrastructure with Pulumi
       id: pulumi
       uses: pulumi/actions@v3
       with:
         command: destroy
-        stack-name: ${{ github.event.inputs.pulumi-stack-name }}
+        stack-name: ${{ github.actor }}/ecs-flow-infrastructure/dev
         work-dir: infrastructure
       env:
         PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}

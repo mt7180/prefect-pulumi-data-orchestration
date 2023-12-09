@@ -29,7 +29,7 @@ def extract_installed_capacity() -> pd.DataFrame:
     )
 
 
-@task(retries=3, retry_delay_seconds=60)
+@task(retries=3, retry_delay_seconds=30)
 def transform_data(xml_str: str, installed_capacity_df: pd.DataFrame) -> Dict[str, Any]:
     generation_forecast_df = entsoe_generation_parser(xml_str)
 
@@ -59,7 +59,7 @@ def transform_data(xml_str: str, installed_capacity_df: pd.DataFrame) -> Dict[st
     return {"chart": "<br>".join(chart_data), "df": result_df, "title": generation_type}
 
 
-@flow
+@flow(retries=3, retry_delay_seconds=30)
 def send_newsletters(data: Dict[str, Any]) -> None:
     """in this example the data won't be loaded into a database,
     but will be sent to registered users

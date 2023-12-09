@@ -115,10 +115,14 @@ jobs:
           prefect work-pool create --type ecs:push air-to-air_push
         continue-on-error: true # if work pool already exists
 
-      - name: Deploy Flow
+      - name: Create Prefect Webhook
         run: |
           prefect cloud webhook create entsoe-msg-webhook \
-            --template '{ "event": "entsoe-event", "resource": { "prefect.resource.id": "entsoe-msg-webhook-id" } }'
+          --template '{ "event": "entsoe-event", "resource": { "prefect.resource.id": "entsoe-msg-webhook-id" } }'
+        continue-on-error: true # if webhook already exists
+
+      - name: Deploy Flow
+        run: |
           python -m etl.dataflow
         env:
           ECR_REPO_URL: ${{ needs.create-aws-infrastructure.outputs.aws_ecr_url}}

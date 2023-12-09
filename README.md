@@ -1,10 +1,11 @@
 # prefect-pulumi-data-orchestration
 
-## Example project to create event-driven serverless dataflows and infrastructure on demand with Prefect + AWS ECS push workpool + webhook + automation, Pulumi and entsoe
+## Orchestrating Event-driven Data Pipelines and Architecture with Prefect + Pulumi + AWS: 
+### An Example Project using the new Prefect Features such as ECS:push Work Pool, Webhook & Automation to Detect and Process Incoming Data from entso-e Transparency Platform and Orchestrate the Dataflow Serverless with Python
 
 ---
 
-## Prerequisits
+### Prerequisits
 1. Sign up for Prefect Cloud and create a workspace and aws:ecs push workpool (todo: implement in gh action)
 2. Sign up for AWS and assign the necessary permissions to your IAM user (todo: give list of policies for ECR, ECS ...) 
 3. Sign up for the entsoe transparency platform and ask for Restful API access and Data Consumer subscription for private use (todo: put link)
