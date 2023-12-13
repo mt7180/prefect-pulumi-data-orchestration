@@ -1,8 +1,9 @@
 ## Orchestrating Event-Driven Serverless Data Pipelines and Architecture with Prefect + Pulumi + AWS: 
 ### An example project that showcases how to use the new Prefect features such as AWS ECS:push Work Pool, Webhook & Automation to detect and process incoming data from entso-e Transparency Platform automatically and orchestrate the dataflow serverless with Python. The project is built using Prefect, Pulumi, GitHub Actions and AWS services.
 
-
-<p><img align="center" src="./images/clouds.png" width="70%" height="70%" /></p>
+ <figure style="text-align: center;">
+ <img src="./images/clouds.png" width="70%" height="70%" />
+ </figure>
 
 
 >### Table of Contents:
