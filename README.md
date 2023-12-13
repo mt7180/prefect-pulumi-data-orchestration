@@ -328,7 +328,7 @@ The automation will wait for any Prefect event emitted by the webhook (or any ot
 ### The GitHub Actions
 We are using Github Actions for our example project to automatically set-up the AWS infrastructure, create a Prefect work pool and a webhook, and deploy the flow to it with a Deployment trigger assigned. Finally, the GitHub Action will fire a test event to the automation to see everything in action. You will need to pass in your preferred aws region and the aws_credential_block_id. You can get the id by executing `prefect blocks ls` in your terminal.
 
-So in fact, once everything is configured (Prerequisits!), everything is set-up with one click in GitHub.   
+So in fact, once everything is configured (prerequisites!), you can set up the deployment with one click in GitHub.   
 
 ![run github action](./images/run_gh_action.png)
 ->  
