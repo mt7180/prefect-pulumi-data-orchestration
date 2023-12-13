@@ -30,21 +30,21 @@ A small side note: If you are a Python enthusiast like me, this is exactly the r
 
 #### Why Prefect?
 Prefect is a workflow orchestration platform and offers a very simple way of transforming any Python function into a unit of work that can be observed and orchestrated. 
-With a few decorators, it adds functionalities like automatic retries, distributed execution and scheduling to your code and transformes it into resilient, dynamic workflows which are reactive and recover from unexpected changes. 
+With a few decorators, it adds functionalities like automatic retries, distributed execution and scheduling to your code and transforms it into resilient, dynamic workflows which are reactive and recover from unexpected changes. 
 A big advantage is also, that it allows for very easy scaling from simple local testing in Python to productional use on (serverless) infrastructure of your choice, without changes.
-You can build [scheduled] or [event-driven data pipelines], run them on on your local machine or [serverless on GitHub] or more advanced on an AWS ECS Cluster, and stream even (near) [real-time], which makes it is very versatile. With [Prefect Cloud] it also gives you a nice UI for visualizing your flow runs and configuring your Prefect components such as work pools, Blocks, Webhooks and Automations.
+You can build [scheduled] or [event-driven data pipelines], run them on your local machine or [serverless on GitHub] or more advanced on an AWS ECS Cluster, and stream even (near) [real-time], which makes it is very versatile. With [Prefect Cloud] it also gives you a nice UI for visualizing your flow runs and configuring your Prefect components such as work pools, Blocks, Webhooks and Automations.
 
-Compared to Apache Airflows DAGs-based approach (Directed Acyclic Graphs, which enable explicit control over the sequence of task execution), Prefect is designed to make complex workflows simple and provides an intuitive framework for orchestrating them. Prefect also supports event-driven workflows as a first class concept, making it easy to trigger flows based on events. Furthermore, Prefect excels with its debugging capabilities and efficient scaling of infrastructure. 
+Compared to Apache Airflows DAGs-based approach (Directed Acyclic Graphs, which enable explicit control over the sequence of task execution), Prefect is designed to make complex workflows simple and provides an intuitive framework for orchestrating them. Prefect also supports event-driven workflows as a first-class concept, making it easy to trigger flows based on events. Furthermore, Prefect excels with its debugging capabilities and efficient scaling of infrastructure. 
 
 #### Why Pulumi?
 [Pulumi] lets you define "Infrastructure as Code" (IaC), which is a concept of building and managing your custom cloud infrastructure by code and makes it easy to edit, distribute and version control your configurations. And moreover, you can automate the process of creating, but also updating and deleting the infrastructure with one command, which makes it very powerful in combination with CI/CD. Pulumi supports a wide range of programming languages for the infrastructure definition, allowing you to choose your favorite one. Guess, which we will use :wink:
 
 #### Why AWS ECS?
 [AWS] Elastic Container Service (ECS) is a fully managed container orchestration service by Amazon and provides a powerful and scalable solution for deploying and managing containerized applications without having to manage the underlying infrastructure. The key component for the powerful interaction between Prefect and ECS is the AWS ECS API, which plays a crucial role in defining and configuring the tasks that run within ECS clusters. A task, in ECS terms, is the basic unit of work that represents a set of containerized applications or services running together. The ECS API enables users to specify various parameters for their tasks, such as the Docker image to use, CPU and memory requirements, networking configurations, and more. 
-AWS ECS is one of the three common options, you could also use Google Cloud Run or Azure ACI.
+AWS ECS is one of the three common options, alternatively you could also use Google Cloud Run or Azure ACI.
  
 ---   
-## Get ready for an exciting deep-dive, we will get hands on now!
+## Get ready for an interesting deep dive, we will get hands on now!
 Find the full code example in following [GitHub repo], the folder structure looks as shown below:
 <style>
      pre {
@@ -86,7 +86,7 @@ def data_flow(event_msg: str) -> None:
 ```
 When you feed in an event message string, the message payload will get extracted, some more data is gathered and transformed to finally be used for a newsletter, which will be sent to each registered user.   
 
-The functions used in this workflow are also decorated and are in fact prefect tasks and a subflow, which benefit from the defined retry functionality, if, for example, the API call or email send task does not work on the first attempt:  
+The functions used in this workflow are also decorated and are in fact prefect tasks and a sub-flow, which benefit from the defined retry functionality, if, for example, the API call or email send task does not work on the first attempt:  
 ```python
 # dataflow.py
 
@@ -162,7 +162,7 @@ def send_newsletters(data: Dict[str, Any]) -> None:
         )
 
 ```
-It is possible to run this flow locally on your computer by feeding in some mocked data for the event_msg. You don't necessarily need the entso-e api key for a first test run, but the newsletters data will be outdated and miss some information. All you have to prepare for this, is the "Prefect" step of the following [Prerequisits](#prerequisites-to-run-the-dataflow), you may want to set the entsoe_api_key="", if you don't have one so far, and the deployment mode to "LOCAL_TEST". In fact, you could reduce the following code to one line: `if __name__ == "__main__": data_flow(mock_event_data())`, but I like to have the different optiones combined here. 
+It is possible to run this flow locally on your computer by feeding in some mocked data for the event_msg. You don't necessarily need the entso-e api key for a first test run, but the newsletters data will be outdated and miss some information. All you have to prepare for this, is the "Prefect" step of the following [Prerequisits](#prerequisites-to-run-the-dataflow), you may want to set the entsoe_api_key="", if you don't have one so far, and the deployment mode to "LOCAL_TEST". In fact, you could reduce the following code to one line: `if __name__ == "__main__": data_flow(mock_event_data())`, but I like to have the different options combined here. 
 ```python
 # dataflow.py
 
@@ -191,11 +191,11 @@ After running the command `python -m etl.dataflow` in your terminal, the flow is
 
 ![flow_chart](./images/flow_chart.png)
 
-Great, but at a certain point we want to close our laptop and everything should work remotely and reactive (scheduled, event-driven). We have to deploy our flow and we have [two options](https://docs.prefect.io/latest/concepts/deployments/#two-approaches-to-deployments) for this: 
-1) Serving flows on long-lived infrastructure: start a long-running process with the **.serve()** method in a location of choice  (often within a Docker container) that is responsible for managing all of the runs for the associated deployment(s). The process stays in communication with Prefect API and monitors and executes each flow run. It is simple, fast and the user has maximum control over infrastructure, but since it is a long running process, it is more costly since infrastructure has to run the whole time.
-2) Dynamically provisioning infrastructure with workers: **.deploy()** a flow to a work pool and then a worker will pick it up to execute the flow run on your infrastructure. In pull work pools you need to set up and maintain your own worker (but we will use the new push work pool feature). The infrastructure is ephemeral and dynamically provisioned, which allows to essentially "scale to zero" when nothing is running, as the worker process is much more lightweight than the workflows themselves, which is a big advantage. On the other hand it is a more complex approach, since a worker has more components and may be more difficult to set up and understand.
+Great, but at a certain point we want to close our laptop, and everything should work remotely and reactive (scheduled, event-driven). We have to deploy our flow and we have [two options](https://docs.prefect.io/latest/concepts/deployments/#two-approaches-to-deployments) for this: 
+1) Serving flows on long-lived infrastructure: start a long-running process with the **.serve()** method in a location of choice  (often within a Docker container) that is responsible for managing all of the runs for the associated deployment(s). The process stays in communication with Prefect API and monitors and executes each flow run. It is simple, fast and the user has maximum control over infrastructure, but since it is a long running process, it is more costly since infrastructure must run the whole time.
+2) Dynamically provisioning infrastructure with workers: **.deploy()** a flow to a work pool and then a worker will pick it up to execute the flow run on your infrastructure. In pull work pools you need to set up and maintain your own worker (but we will use the new push work pool feature). The infrastructure is ephemeral and dynamically provisioned, which allows to essentially "scale to zero" when nothing is running, as the worker process is much more lightweight than the workflows themselves, which is a big advantage. On the other hand, it is a more complex approach since a worker has more components and may be more difficult to set up and understand.
 
-We will opt for the second approach and deploy() or flow, which has recently become much easier with the push work pools. However, since we are using multiple frameworks here, we must first complete the following prerequisits.
+We will opt for the second approach and deploy() or flow, which has recently become much easier with the push work pools. However, since we are using multiple frameworks here, we must first complete the following prerequisites.
 
 > **_NOTE:_** unfortunately it takes some time until the entso-e access is granted, but in the meantime you may want to get familiar with all the other frameworks and resources
 
@@ -216,7 +216,7 @@ We will opt for the second approach and deploy() or flow, which has recently bec
 - Get [Data Consumer Subscription rights] and subscribe to a data feed 
 #### AWS 
 *to run our flow on AWS ECS Fargate, we will need the following configurations:*
-- Sign up for AWS (you will be prompted for your Credit Card Number, but you get a free first year for trial usage which hase some [AWS service restrictions])
+- Sign up for AWS (you will be prompted for your Credit Card Number, but you get a free first year for trial usage which has some [AWS service restrictions])
 - Create an IAM user in the AWS Management Console (in access management / Users => aws_access_key_id) and assign the necessary permissions to your IAM user (ECR, ECS ... todo: give list of policies for ECR, ECS ...) 
 - when you have created an IAM user, click on the user name and open the security credentials tab, create an access key for programmatical access (aws_secret_access_key)
 - install aws cli (on mac: brew install awscli)
@@ -235,8 +235,8 @@ $ pulumi new aws-python
 ```
 
 ### The Prefect Deployment
-If you have completed all the prerequisits, congratulations, you are now ready to deploy our flow and run it on an AWS ECS Cluster. But wait, what exactly is a deployment and how can we do this?  
-A deployment is an entrypoint to a Prefect flow. It contains all information about its configuration, more explicitely spoken: it defines when, how and where the flow run will be executed. You can write your deployment configuration into the [prefect.yaml] file, but it is also possible to submit the same information to the Prefect API with the flow method .deploy() in your python file.
+If you have completed all the prerequisites, congratulations, you are now ready to deploy our flow and run it on an AWS ECS Cluster. But wait, what exactly is a deployment and how can we do this?  
+A deployment is an entry point to a Prefect flow. It contains all information about its configuration, more explicitly spoken: it defines when, how and where the flow run will be executed. You can write your deployment configuration into the [prefect.yaml] file, but it is also possible to submit the same information to the Prefect API with the flow method .deploy() in your python file.
 
 ```python
 data_flow.deploy(
@@ -254,12 +254,12 @@ data_flow.deploy(
 )
 ```
 
-The .deploy method will build a Docker image with your flow code baked into it and push the image to the (Docker Hub or other) registry specified in the image argument. You may also use a custom Dockerfile in combination with an  DeploymentImage object, as shown above. This gives you maximum flexibility to run specific flow run commands in a predefined flow execution environment.
+The .deploy method will build a Docker image with your flow code baked into it and push the image to the (Docker Hub or other) registry specified in the image argument. You may also use a custom Dockerfile in combination with a DeploymentImage object, as shown above. This gives you maximum flexibility to run specific flow run commands in a predefined flow execution environment.
 >Note: You need to be authenticated to Prefect Cloud and your container registry when running the deployment by executing the python file (in our case with the command `python -m etl.dataflow`` while venv is activated)
 
 ### Prefects new ECS Push Work Pool
 In general, a flow is deployed to a work pool for scheduling. Traditionally, a worker (running in the execution environment) had to poll the work pool for new flow runs to execute (pull work pools), but now [push work pools] can submit flow runs to serverless infrastructure like Cloud Run, Azure Container Instances, and AWS ECS Fargate directly, without the need for an agent or worker to run. This makes the set-up a lot easier.  
-When you create the ECS push work pool (you can do this directly in the Prefect Cloud UI, but  we will create it with our GitHub action by prefect cli), you don't have to set any of the job template parameters, as long as you submit them via the job_variables parameter of the flow deployment. The deployment-specific job variables always overwrite the work pool job template values. On the other hand you can pre-populate the work pool job template with your infrastructure specific information, if you want to (and they don't change). But since we use pulumi to set-up our infrastructure, we won't have this information in advance, we will submit them via the job variables in the deployment step of the GitHub Action (gh_action_init_dataflow.yml).
+When you create the ECS push work pool (you can do this directly in the Prefect Cloud UI, but we will create it with our GitHub action by prefect cli), you don't have to set any of the job template parameters, as long as you submit them via the job_variables parameter of the flow deployment. The deployment-specific job variables always overwrite the work pool job template values. On the other hand, you can pre-populate the work pool job template with your infrastructure specific information, if you want to (and they don't change). But since we use pulumi to set-up our infrastructure, we won't have this information in advance, we will submit them via the job variables in the deployment step of the GitHub Action (gh_action_init_dataflow.yml).
 >Advanced: If you are already familiar with the [AWS Task Definition], you might have noticed, that not all parameters of the Task Definition Template are available in the base job template of the Prefect ECS (push) work pool. It is very easy to [adjust the job template], if you need to set a specific task definition parameter, the linked video shows how to do this in the Prefect Cloud UI. In short: put the desired parameter to the underlaying work pool json definition (advanced tab of the work pool configuration), to ingest the needed parameters AND assign it also to the desired task definition parameter down at the bottom in the job configuration section (in jinja notation!).  
 By the way: the following command will give you the base job template for the ecs:push work pool in the terminal: `prefect work-pool get-default-base-job-template --type ecs:push`
 
@@ -268,7 +268,7 @@ Recently, also a new optional ecs push work pool parameter  [--provision-infra] 
 ```bash
 prefect work-pool create --type ecs:push my_push_work-pool --provision-infra
 ```
-This option provides seamless automatic provisioning of the AWS infrastructure. Only the AWS credentials need to be provided, Prefect will then create the essential components such as ECS cluster, IAM role and VPC on your behalf. Unfortunately, this option did not work for our particular configuration. Moreover, if you want to have full control over all configurations for the AWS components and policies, you need to create the infrastructure by yourself. In this context, the Pulumi framework proves to be very useful and a sophisticated solution.
+This option provides seamless automatic provisioning of the AWS infrastructure. Only the AWS credentials need to be provided, Prefect will then create the essential components such as ECS cluster, IAM role and VPC on your behalf. Unfortunately, this option did not work for our setup configuration. Moreover, if you want to have full control over all configurations for the AWS components and policies, you need to create the infrastructure by yourself. In this context, the Pulumi framework proves to be very useful and a sophisticated solution.
  
 ### Prefect Event Webhooks and Deployment Triggers (Automations)
 OK, now we have defined our flow and the necessary AWS infrastructure, but how can we catch the message from the entso-e web service with Prefect and how can we feed the message data into our flow? That's exactly where Prefect webhooks and automations come into play. They will make our flow run event-driven.  
@@ -303,8 +303,8 @@ Now that we've discussed each piece of our event-driven, serverless workflow puz
 
 ![ecs:push work pool](./images/ecs-push-work-pool.png)
 
-The visualization covers all steps of the flow run submition process. When we deploy the flow from our local computer to Prefect Cloud (or via Github action which is not shown here), the Prefect API will submit the deployment to the specified work pool and pushes the Docker container image of the flow to AWS ECR. In the same time an Automation will be created, because we set the trigger parameter to a DeploymentTrigger. The automation waits for a Prefect event emitted by the webhook (or any other Prefect event with the same resource id which you will see when we test our automated datapipeline in the init github action with the emit_event function). So when the entso-e message with a data update hits our webhook, a flow run is triggered immediately by the automation (with the entso-e data passed in) and the work pool will submit the flow run to the serverless AWS infrastructure, which we specified in the job_variables. Therefore, Prefect provides the AWS ECS API with metadata which include the full task definition parameter set, which is used in turn to generate an ECS task. The task is provided with the flow Docker image url and is specified to run our flow from the image.  
-As mentined before, for this ecs:push work pool setup, we have to provide the work pool with some information about the infrastructure we want to use for our flow run. Therefore, we have to manually create and assign them to the job variables of a deployment, which will overwrite the work pool job template.
+The visualization covers all steps of the flow run submission process. When we deploy the flow from our local computer to Prefect Cloud (or via Github action which is not shown here), the Prefect API will submit the deployment to the specified work pool and pushes the Docker container image of the flow to AWS ECR. In the same time an Automation will be created, because we set the trigger parameter to a DeploymentTrigger. The automation waits for a Prefect event emitted by the webhook (or any other Prefect event with the same resource id which you will see when we test our automated datapipeline in the init github action with the emit_event function). So, when the entso-e message with a data update hits our webhook, a flow run is triggered immediately by the automation (with the entso-e data passed in) and the work pool will submit the flow run to the serverless AWS infrastructure, which we specified in the job_variables. Therefore, Prefect provides the AWS ECS API with metadata which include the full task definition parameter set, which is used in turn to generate an ECS task. The task is provided with the flow Docker image url and is specified to run our flow from the image.  
+As mentioned before, for this ecs:push work pool setup, we have to provide the work pool with some information about the infrastructure we want to use for our flow run. Therefore, we must manually create and assign them to the job variables of a deployment, which will overwrite the work pool job template.
 
 ### The GitHub Actions
 >Note: Find the mainn Pulumi program in the `__main__.py` file of the infrastructure folder to get more information about the AWS infrastructure definitions.
