@@ -18,6 +18,7 @@
 >- [The Prefect Deployment](#the-prefect-deployment)
 >- [Prefects new ECS Push Work Pool](#prefects-new-ecs-push-work-pool)
 >- [Prefect Event Webhooks and Deployment Triggers (Automations)](#prefect-event-webhooks-and-deployment-triggers-automations)
+>- [Infrastructure Provisioning with Pulumi](#infrastructure-provisioning-with-pulumi)
 >- [Putting it All Together](#putting-it-all-together)
 >- [The GitHub Actions](#the-github-actions)
 >- [Conclusion](#conclusion)
@@ -298,9 +299,24 @@ data_flow.deploy(
 ```
 The automation has two parts. The match part looks for every Prefect event and matches on the specified resource id, in this case the id of the newly created static webhook from above. The parameters part sets the parameters to be fed into the deployed flow. Since our flow [data_flow] has an event_msg parameter, this has to be assigned in the parameters part of the Automation, in this case we assign the whole payload body of the event to it.
 
+### Infrastructure Provisioning with Pulumi
+As discussed above, we will define and create our necessary AWS infrastructure on our own. No reason to panic. Everything is prepared in the `__main__.py` file of the infrastructure folder. If you are using Pulumi with Python, this is the main file to write the definitions of your AWS (or other cloud providers) infrastructure.  
+We need to create the following components and later add them to the work pool job template:
+
+- AWS ECR repository
+- AWS ECS Cluster
+- AWS VPC with following assigned to:
+    - internet gateway
+    - subnet
+    - route table
+- AWS IAM task role
+- AWS IAM execution role
+
+The pulumi outputs are configured to give exactly the information, the work pool will need to submit the flow run (name, arn, url, etc.). We will feed this informations into our work pool via the job variables of our deployment.
+
 ### Putting it all together
 
-Now that we've discussed each piece of our event-driven, serverless workflow puzzle, we'll put it all together. The following visualization shows the big picture of the ecs:push work pool on the Prefect side, and the AWS ECR and ECS servives on the other side. The ECS API and the ECS Task Definition acts as an interface. The following image essentially represents a combination of the following resources: [AWS ECS Fargate architecture] and [Prefect Push Work Pool Setup]
+Now that we've discussed each piece of our event-driven, serverless workflow puzzle, we'll put it all together. The following visualization shows the big picture of the ecs:push work pool on the Prefect side, and the AWS ECR and ECS services on the other side. The ECS API and the ECS Task Definition act as an interface. The following image was mainly composed by combining the following resources: [AWS ECS Fargate architecture] and [Prefect Push Work Pool Setup].
 
 ![ecs:push work pool](./images/ecs-push-work-pool.png)
 
@@ -308,8 +324,6 @@ The visualization covers all steps of the flow run submission process. When we d
 As mentioned before, for this ecs:push work pool setup, we have to provide the work pool with some information about the infrastructure we want to use for our flow run. Therefore, we must manually create and assign them to the job variables of a deployment, which will overwrite the work pool job template.
 
 ### The GitHub Actions
->Note: Find the mainn Pulumi program in the `__main__.py` file of the infrastructure folder to get more information about the AWS infrastructure definitions.
-
 We are using Github actions for our example project to automatically set-up the AWS infrastructure, create a Prefect work pool and a webhook, and deploy the flow to it with a Deployment trigger assigned. You will need to pass in your preferred aws region and the aws_credential_block_id. You can get the id by executing `prefect blocks ls` in your terminal.
 
 So in fact, once everything is configured (Prerequisits!), everything is set-up with one click in GitHub.   
