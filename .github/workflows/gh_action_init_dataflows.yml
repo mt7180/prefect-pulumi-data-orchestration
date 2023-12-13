@@ -9,8 +9,8 @@ on:
         default: 'eu-central-1'
         type: string
       aws_credential_block_id:
-        description: The id of your AWS Credential Block, find it in Prefect Cluod UI
-        required: true
+        description: The ID of your AWS Credentials Block, use "prefect blocks ls" command in your terminal to find it.
+        required: false
         default: ''
         type: string
 
@@ -119,7 +119,6 @@ jobs:
         run: |
           prefect cloud webhook create entsoe-msg-webhook \
           --template '{ "event": "entsoe-event", "resource": { "prefect.resource.id": "entsoe-msg-webhook-id" } }'
-        continue-on-error: true # if webhook already exists
 
       - name: Deploy Flow
         run: |

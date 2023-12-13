@@ -1,5 +1,6 @@
 from enum import Enum
 import pathlib
+import requests
 from typing import Any, Dict, List
 from prefect_email import EmailServerCredentials, email_send_message
 from prefect import task, flow
@@ -17,19 +18,27 @@ def extract_event_payload(event_msg: str) -> str:
     return event_msg.split("<msg:Payload>")[1]
 
 
-@task(retries=3, retry_delay_seconds=60)
+@task(retries=3, retry_delay_seconds=30, log_prints=True)
 def extract_installed_capacity() -> pd.DataFrame:
+    # entsoe_api_key = "" # if you don't have one yet
     entsoe_api_key = Secret.load("entsoe-api-key").get()
     now = pd.Timestamp.today(tz="Europe/Brussels")
     e_client = EntsoePandasClient(entsoe_api_key)
-    return e_client.query_installed_generation_capacity(
-        "DE",
-        start=pd.Timestamp(year=now.year, month=1, day=1, tz="Europe/Brussels"),
-        end=now,
-    )
+    try:
+        return e_client.query_installed_generation_capacity(
+            "DE",
+            start=pd.Timestamp(year=now.year, month=1, day=1, tz="Europe/Brussels"),
+            end=now,
+        )
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == 401:
+            print("Authentication failed")
+            return pd.DataFrame()
+        else:
+            raise
 
 
-@task(retries=3, retry_delay_seconds=30)
+@task(retries=3, retry_delay_seconds=30, log_prints=True)
 def transform_data(xml_str: str, installed_capacity_df: pd.DataFrame) -> Dict[str, Any]:
     generation_forecast_df = entsoe_generation_parser(xml_str)
 
@@ -38,11 +47,12 @@ def transform_data(xml_str: str, installed_capacity_df: pd.DataFrame) -> Dict[st
         generation_forecast_df.index.minute == 0
     ]
     generation_type = generation_forecast_df.columns[0]
+
     result_df = pd.DataFrame(
         data={
             "forecast": generation_forecast_df[generation_type],
             "installed": installed_capacity_df.get(
-                generation_type, default=pd.Series()
+                generation_type, default=pd.Series([0])
             ).iloc[0],
         },
         index=generation_forecast_df.index,
@@ -50,12 +60,14 @@ def transform_data(xml_str: str, installed_capacity_df: pd.DataFrame) -> Dict[st
 
     chart_data = []
     for index, row in result_df.iterrows():
-        percentage = int(row["forecast"] / row["installed"] * 100)
+        # only applies for mocked mode
+        installed = v if (v := row["installed"]) > 0 else row["forecast"]
+
+        percentage = int(row["forecast"] / installed * 100)
         chart_data.append(
             f"{index} | {'#'*percentage}{'_'*(100-percentage)}"
             f"  => {percentage}% ({row['forecast']}MW/{row['installed']}MW)"
         )
-
     return {"chart": "<br>".join(chart_data), "df": result_df, "title": generation_type}
 
 
@@ -100,16 +112,15 @@ if __name__ == "__main__":
             "LOCAL_TEST",
             "LOCAL_DOCKER_TEST",
             "ECS_PUSH_WORK_POOL",
-            "ECS_PUSH_WITH_INFRA_PROVINIONING",
         ],
     )
 
-    ### Set your preferred flow run/ deployment mode:
+    ### Set your preferred flow run/ deployment mode here:
     deploy_mode = DeployModes.ECS_PUSH_WORK_POOL
-    ###
 
     if deploy_mode == DeployModes.LOCAL_TEST:
-        ## test flow with mocked event data and run locally without deployment:
+        # test flow with mocked event data
+        #  and run it locally without deployment:
         data_flow(mock_event_data())
 
     else:
@@ -126,17 +137,10 @@ if __name__ == "__main__":
         triggers: List[DeploymentTrigger] | None = None
 
         if deploy_mode == DeployModes.LOCAL_DOCKER_TEST:
-            ## test flow docker deployment locally and initiate quick run in prefect cloud ui:
+            # test flow docker deployment locally and initiate quick run in prefect cloud ui:
+            name = "local-docker-test"
             push = False
-
-        elif deploy_mode == DeployModes.ECS_PUSH_WITH_INFRA_PROVINIONING:
-            ## deploy to ecs:push workpool with --provision-infra mode,
-            ## infrastructure is provisioned by prefect, no job variables here
-            ## -> not working, yet
-
-            # you can also set an automation here, if you want
-            # triggers = []
-            push = True
+            work_pool_name = "newsletter_docker_workpool"
 
         elif deploy_mode == DeployModes.ECS_PUSH_WORK_POOL:
             # provision work pool with information about your AWS infrastructure
@@ -160,7 +164,9 @@ if __name__ == "__main__":
                     parameters={"event_msg": "{{ event.payload.body }}"},
                 )
             ]
+            name = os.getenv("ECR_REPO_URL", "")
             push = True
+            work_pool_name = "air-to-air_push"
             # note the following deployment procedure (same as in gh action):
             # 1: go into infrastructure folder and execute command: pulumi up
             # 2: put pulumi output to .env file
@@ -169,11 +175,11 @@ if __name__ == "__main__":
             #    aws ecr get-login-password --region region | docker login --username AWS --password-stdin aws_account_id.dkr.ecr.region.amazonaws.com
 
         data_flow.deploy(
-            "deploy_dataflow_air-to-air_push",
-            work_pool_name="air-to-air_push",
+            "deploy_dataflow_air-to-air_push-infra-loc",
+            work_pool_name=work_pool_name,
             job_variables=job_variables,
             image=DeploymentImage(
-                name=os.getenv("ECR_REPO_URL", ""),
+                name=name,
                 tag=os.getenv("IMAGE_TAG"),
                 dockerfile=cfd / "Dockerfile",
             ),
