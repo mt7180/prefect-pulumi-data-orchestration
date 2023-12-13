@@ -235,7 +235,7 @@ $ pulumi new aws-python
 ```
 
 ### The Prefect Deployment
-If you have now completed all the prerequisits, congratulations, you are now ready to deploy our flow and run it on an AWS ECS Cluster. But wait, what exactly is a deployment and how do we do this?  
+If you have completed all the prerequisits, congratulations, you are now ready to deploy our flow and run it on an AWS ECS Cluster. But wait, what exactly is a deployment and how can we do this?  
 A deployment is an entrypoint to a Prefect flow. It contains all information about its configuration, more explicitely spoken: it defines when, how and where the flow run will be executed. You can write your deployment configuration into the [prefect.yaml] file, but it is also possible to submit the same information to the Prefect API with the flow method .deploy() in your python file.
 
 ```python
@@ -271,7 +271,7 @@ prefect work-pool create --type ecs:push my_push_work-pool --provision-infra
 This option provides seamless automatic provisioning of the AWS infrastructure. Only the AWS credentials need to be provided, Prefect will then create the essential components such as ECS cluster, IAM role and VPC on your behalf. Unfortunately, this option did not work for our particular configuration. Moreover, if you want to have full control over all configurations for the AWS components and policies, you need to create the infrastructure by yourself. In this context, the Pulumi framework proves to be very useful and a sophisticated solution.
  
 ### Prefect Event Webhooks and Deployment Triggers (Automations)
-OK, now we have defined our flow and the necessary AWS infrastructure, but how can we catch the message from the entso-e web service with Prefect and how can we feed the message data into our flow? Thats exactly the point where Prefect webhooks and automations come into play. They will make our flow run event-driven.  
+OK, now we have defined our flow and the necessary AWS infrastructure, but how can we catch the message from the entso-e web service with Prefect and how can we feed the message data into our flow? That's exactly where Prefect webhooks and automations come into play. They will make our flow run event-driven.  
 A Prefect webhook exposes a public and unique URL endpoint to receive events from other systems (such as the entso-e web service, but usually you would point [some other webhook] to it) and transforms them into Prefect events, which are logged and can be used in Prefect automations. They are defined by a template like the following in the terminal, but you can also create them in Prefect Cloud UI:
 ```bash
 prefect cloud webhook create my_webhook \
