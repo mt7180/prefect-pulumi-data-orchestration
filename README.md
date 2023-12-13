@@ -1,7 +1,10 @@
 <header><style>
-    white-space: pre-wrap;
-    overflow-x: scroll;"
-</style></header>
+     pre {
+       white-space: pre-wrap;
+       overflow-x: scroll;
+     }
+ </style></header>  
+ 
 ## Orchestrating Event-Driven Serverless Data Pipelines and Architecture with Prefect + Pulumi + AWS: 
 ### An example project that showcases how to use the new Prefect features such as AWS ECS:push Work Pool, Webhook & Automation to detect and process incoming data from entso-e Transparency Platform automatically and orchestrate the dataflow serverless with Python. The project is built using Prefect, Pulumi, GitHub Actions and AWS services.
 
