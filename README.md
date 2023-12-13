@@ -300,7 +300,8 @@ data_flow.deploy(
 The automation has two parts. The match part looks for every Prefect event and matches on the specified resource id, in this case the id of the newly created static webhook from above. The parameters part sets the parameters to be fed into the deployed flow. Since our flow [data_flow] has an event_msg parameter, this has to be assigned in the parameters part of the Automation, in this case we assign the whole payload body of the event to it.
 
 ### Infrastructure Provisioning with Pulumi
-As discussed above, we will define and create our necessary AWS infrastructure on our own. No reason to panic. Everything is prepared in the `__main__.py` file of the infrastructure folder. If you are using Pulumi with Python, this is the main file to write the definitions of your AWS (or other cloud providers) infrastructure.  
+As discussed above, we will define and create the necessary AWS infrastructure on our own and assign the information about it to the job variables of a deployment.
+No reason to panic. Everything is prepared in the `__main__.py` file of the infrastructure folder. If you are using Pulumi with Python, this is the main file to write the definitions of your AWS (or other cloud providers) infrastructure.  
 We need to create the following components and later add them to the work pool job template:
 
 - AWS ECR repository
@@ -321,7 +322,6 @@ Now that we've discussed each piece of our event-driven, serverless workflow puz
 ![ecs:push work pool](./images/ecs-push-work-pool.png)
 
 The visualization covers all steps of the flow run submission process. When we deploy the flow from our local computer to Prefect Cloud (or via Github action which is not shown here), the Prefect API will submit the deployment to the specified work pool and pushes the Docker container image of the flow to AWS ECR. In the same time an Automation will be created, because we set the trigger parameter to a DeploymentTrigger. The automation waits for a Prefect event emitted by the webhook (or any other Prefect event with the same resource id which you will see when we test our automated datapipeline in the init github action with the emit_event function). So, when the entso-e message with a data update hits our webhook, a flow run is triggered immediately by the automation (with the entso-e data passed in) and the work pool will submit the flow run to the serverless AWS infrastructure, which we specified in the job_variables. Therefore, Prefect provides the AWS ECS API with metadata which include the full task definition parameter set, which is used in turn to generate an ECS task. The task is provided with the flow Docker image url and is specified to run our flow from the image.  
-As mentioned before, for this ecs:push work pool setup, we have to provide the work pool with some information about the infrastructure we want to use for our flow run. Therefore, we must manually create and assign them to the job variables of a deployment, which will overwrite the work pool job template.
 
 ### The GitHub Actions
 We are using Github actions for our example project to automatically set-up the AWS infrastructure, create a Prefect work pool and a webhook, and deploy the flow to it with a Deployment trigger assigned. You will need to pass in your preferred aws region and the aws_credential_block_id. You can get the id by executing `prefect blocks ls` in your terminal.
