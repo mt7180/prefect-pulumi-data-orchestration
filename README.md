@@ -1,8 +1,12 @@
+<header><style>
+    white-space: pre-wrap;
+    overflow-x: scroll;"
+</style></header>
 ## Orchestrating Event-Driven Serverless Data Pipelines and Architecture with Prefect + Pulumi + AWS: 
-### An example project that showcases how to use the new Prefect features such as ECS:push Work Pool, Webhook & Automation to detect and process incoming data from entso-e Transparency Platform automatically and orchestrate the dataflow serverless with Python. The project is built using Prefect, Pulumi, GitHub Actions and AWS services.
+### An example project that showcases how to use the new Prefect features such as AWS ECS:push Work Pool, Webhook & Automation to detect and process incoming data from entso-e Transparency Platform automatically and orchestrate the dataflow serverless with Python. The project is built using Prefect, Pulumi, GitHub Actions and AWS services.
 
 
-<p style="text-align:center;"><img src="./images/clouds.png" width="70%" height="70%" /></p>
+<p><img align="center" src="./images/clouds.png" width="70%" height="70%" /></p>
 
 
 >### Table of Contents:
@@ -45,7 +49,7 @@ AWS ECS is one of the three common options, you could also use Google Cloud Run 
 ---   
 ## Get ready for an exciting deep-dive, we will get hands on now!
 Find the full example code in following [GitHub repo], the folder structure looks as shown below:
-<p style="white-space: pre-wrap;overflow-x: scroll;">
+<pre>
 <code style="white-space: pre; overflow-x: scroll;">
 .
 |- .github/workflows                            # github actions folder
@@ -63,7 +67,7 @@ Find the full example code in following [GitHub repo], the folder structure look
    |- Pulumi.dev.yaml
    |- Pulumi.yaml
    └- requirements.txt                          # requirements for pulumi program
-</code></p>
+</code></pre>
 
 ### The Workflow
 As promised, the data_flow workflow is a decorated python function and quite easy to read:
