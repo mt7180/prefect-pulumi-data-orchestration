@@ -1,51 +1,72 @@
-## Orchestrating Event-Driven Serverless Data Pipelines and Architecture with Prefect + Pulumi + AWS: 
-### An example project showcasing how to use the new Prefect features such as AWS ECS:push Work Pool, Webhook & Automation to detect and process incoming data from entso-e Transparency Platform automatically and orchestrate the dataflow serverless with Python. The project is built using Prefect, Pulumi, GitHub Actions and AWS services.
+## Orchestrating Event-Driven Serverless Data Pipelines with Prefect, Pulumi, and AWS
+### Content
+An example project showcasing how to use the new Prefect features such as AWS ECS:push Work Pool, Webhook & Automation.
+The goal is to detect and process incoming data from entso-e Transparency Platform automatically and orchestrate the dataflow serverless with Python.
+The project is built using Prefect, Pulumi, GitHub Actions and AWS services.
 
  <figure style="text-align: center;">
  <img src="./images/clouds.png" width="70%" height="70%" />
  </figure>
 
 
->### Table of Contents:
+>### Table of Contents
 >- [Motivation](#motivation)
->- [Frameworks](#frameworks)
+>- [Framework Choices](#framework-choices)
 >   - [Why Prefect](#why-prefect)
 >   - [Why Pulumi](#why-pulumi)
 >   - [Why AWS ECS](#why-aws-ecs)
->- [The Example Code](#get-ready-for-an-interesting-deep-dive-we-will-get-hands-on-now)
->- [The Workflow](#the-workflow)
+>- [Example Code](#get-ready-for-an-interesting-deep-dive-we-will-get-hands-on-now)
+>- [Workflow](#the-workflow)
 >- [Prerequisites](#prerequisites-to-run-and-deploy-the-workflow)
->- [The Prefect Deployment](#the-prefect-deployment)
+>- [Prefect Deployment](#the-prefect-deployment)
 >- [Prefects new ECS Push Work Pool](#prefects-new-ecs-push-work-pool)
 >- [Prefect Event Webhooks and Deployment Triggers (Automations)](#prefect-event-webhooks-and-deployment-triggers-automations)
 >- [Infrastructure Provisioning with Pulumi](#infrastructure-provisioning-with-pulumi)
 >- [Putting it All Together](#putting-it-all-together)
->- [The GitHub Actions](#the-github-actions)
+>- [GitHub Actions](#the-github-actions)
 >- [Conclusion](#conclusion)
 
 
 ### Motivation
 todo: ...small motivation text on workflow orchestration and event driven data pipelines...
 
-### Frameworks
-A small side note: If you are a Python enthusiast like me, this is exactly the right reading for you, as all the frameworks we will use offer the possibility to leverage Python. If not: let me show you what is possible with Python beyond pure coding... :smile: 
+<!-- TODO: generate with ChatPGT? -->
+
+### Framework Choices
+If you are a Python enthusiast like me, 
+- this is exactly the right reading for you, as all the frameworks we will use offer the possibility to leverage Python.
+
+Else:
+- let me show you what is possible with Python beyond pure coding... :smile: 
 
 #### Why Prefect?
-Prefect is a workflow orchestration platform and offers a very simple way of transforming any Python function into a unit of work that can be observed and orchestrated. 
-With a few decorators, it adds functionalities like automatic retries, distributed execution and scheduling to your code and transforms it into resilient, dynamic workflows which are reactive and recover from unexpected changes. 
-A big advantage is also, that it allows for very easy scaling from simple local testing in Python to productional use on (serverless) infrastructure of your choice, without changes.
-You can build [scheduled] or [event-driven data pipelines], run them on your local machine or [serverless on GitHub] or more advanced on an AWS ECS Cluster, and stream even (near) [real-time], which makes it is very versatile. With [Prefect Cloud] it also gives you a nice UI for visualizing your flow runs and configuring your Prefect components such as work pools, Blocks, Webhooks and Automations.
+Prefect is a workflow orchestration platform and offers a very simple way of transforming any Python function into a unit of work that can be observed and orchestrated. With a few decorators, it adds functionalities like automatic retries, distributed execution and scheduling to your code and transforms it into resilient, dynamic workflows which are reactive and recover from unexpected changes. 
 
-Compared to Apache Airflows DAGs-based approach (Directed Acyclic Graphs, which enable explicit control over the sequence of task execution), Prefect is designed to make complex workflows simple and provides an intuitive framework for orchestrating them. Prefect also supports event-driven workflows as a first-class concept, making it easy to trigger flows based on events. Furthermore, Prefect excels with its debugging capabilities and efficient scaling of infrastructure. 
+A big advantage is also that it allows for very easy scaling from simple local testing in Python to productional use on (serverless) infrastructure of your choice, without changes.
+You can build [scheduled] or [event-driven data pipelines], run them on your local machine or [serverless on GitHub] or more advanced on an AWS ECS Cluster, and stream even (near) [real-time], which makes it very versatile. 
+
+With [Prefect Cloud] it also gives you a nice UI for visualizing your flow runs and configuring your Prefect components such as work pools, Blocks, Webhooks and Automations.
+
+Compared to Apache Airflows DAGs-based approach (Directed Acyclic Graphs, which enable explicit control over the sequence of task execution), Prefect is designed to make complex workflows simple and provides an intuitive framework for orchestrating them. 
+
+Prefect also supports event-driven workflows as a first-class concept, making it easy to trigger flows based on events. Furthermore, Prefect excels with its debugging capabilities and efficient scaling of infrastructure. 
 
 #### Why Pulumi?
-[Pulumi] lets you define "Infrastructure as Code" (IaC), which is a concept of building and managing your custom cloud infrastructure by code and makes it easy to edit, distribute and version control your configurations. And moreover, you can automate the process of creating, but also updating and deleting the infrastructure with one command, which makes it very powerful in combination with CI/CD. Pulumi supports a wide range of programming languages for the infrastructure definition, allowing you to choose your favorite one. Guess, which we will use :wink:
+[Pulumi] lets you define "Infrastructure as Code" (IaC), which is a concept of building and managing your custom cloud infrastructure by code.
+
+This makes it easy to edit, distribute and version control your configurations. And moreover, you can automate the process of creating, but also updating and deleting the infrastructure with one command, which makes it very powerful in combination with CI/CD. 
+
+Pulumi supports a wide range of programming languages for the infrastructure definition, allowing you to choose your favorite one. Guess, which we will use :wink:
 
 #### Why AWS ECS?
-[AWS] Elastic Container Service (ECS) is a fully managed container orchestration service by Amazon and provides a powerful and scalable solution for deploying and managing containerized applications without having to manage the underlying infrastructure. The key component for the powerful interaction between Prefect and ECS is the AWS ECS API, which plays a crucial role in defining and configuring the tasks that run within ECS clusters. A task, in ECS terms, is the basic unit of work that represents a set of containerized applications or services running together. The ECS API enables users to specify various parameters for their tasks, such as the Docker image to use, CPU and memory requirements, networking configurations, and more. 
+[AWS] Elastic Container Service (ECS) is a fully managed container orchestration service by Amazon and provides a powerful and scalable solution for deploying and managing containerized applications without having to manage the underlying infrastructure. 
+
+The key component for the powerful interaction between Prefect and ECS is the AWS ECS API, which plays a crucial role in defining and configuring the tasks that run within ECS clusters. 
+
+A task, in ECS terms, is the basic unit of work that represents a set of containerized applications or services running together. The ECS API enables users to specify various parameters for their tasks, such as the Docker image to use, CPU and memory requirements, networking configurations, and more. 
+
 AWS ECS is one of the three common options, alternatively you could also use Google Cloud Run or Azure ACI.
- 
----   
+
 ## Get ready for an interesting deep dive, we will get hands on now!
 Find the full code example in following [GitHub repo], the folder structure looks as shown below:
 <style>
@@ -74,21 +95,32 @@ Find the full code example in following [GitHub repo], the folder structure look
    └- requirements.txt                          # requirements for pulumi program
 </code></pre>
 
-### The Workflow
+### Workflow
 As promised, the data_flow workflow is a decorated python function and quite easy to read:
 ```python
 # dataflow.py
 
 @flow
-def data_flow(event_msg: str) -> None:
-    event_payload = extract_event_payload(event_msg)
-    installed_capacity = extract_installed_capacity()
-    data = transform_data(event_payload, installed_capacity)
-    send_newsletters(data)
-```
-When you feed in an event message string, the message payload will get extracted, some more data is gathered and transformed to finally be used for a newsletter, which will be sent to each registered user.   
+def data_flow(event_message: str) -> None:
 
-The functions used in this workflow are also decorated and are in fact prefect tasks and a sub-flow, which benefit from the defined retry functionality, if, for example, the API call or email send task does not work on the first attempt:  
+    event_payload = extract_event_payload(event_message)
+
+    installed_capacity = extract_installed_capacity()
+
+    data = transform_data(event_payload, installed_capacity)
+
+    send_newsletters(data)
+
+```
+
+When you feed in an `event_message`, the message payload will get extracted.
+Then, some more data is gathered and transformed to finally be used for a newsletter, which will be sent to each registered user.   
+
+The functions used in this workflow are also decorated and are in fact prefect tasks and a sub-flow.
+This allow us to define retry functionality, for example for the case, that the API call or email send task does not work on the first attempt.
+
+See the above flow with the related tasks and a second flow below:
+
 ```python
 # dataflow.py
 
@@ -103,9 +135,20 @@ from etl.utils import User, get_users
 from etl.utils import mock_event_data
 
 
+@flow
+def data_flow(event_message: str) -> None:
+
+    event_payload = extract_event_payload(event_message)
+
+    installed_capacity = extract_installed_capacity()
+
+    data = transform_data(event_payload, installed_capacity)
+
+    send_newsletters(data)
+
 @task
-def extract_event_payload(event_msg: str) -> str:
-    return event_msg.split("<msg:Payload>")[1]
+def extract_event_payload(event_message: str) -> str:
+    return event_message.split("<msg:Payload>")[1]
 
 
 @task(retries=3, retry_delay_seconds=30)
@@ -129,6 +172,7 @@ def transform_data(
 
     generation_forecast_df = entsoe_generation_parser(xml_str)
 
+    # TODO: why not add the code here?
     # ...some more steps for filtering 
     # ... and transforming the data ...
 
@@ -164,7 +208,7 @@ def send_newsletters(data: Dict[str, Any]) -> None:
         )
 
 ```
-It is possible to run this flow locally on your computer by feeding in some mocked data for the event_msg. You don't necessarily need the entso-e api key for a first test run, but the newsletters data will be outdated and miss some information. All you have to prepare for this, is the "Prefect" step of the following [Prerequisits](#prerequisites-to-run-the-dataflow), you may want to set the entsoe_api_key="", if you don't have one so far, and the deployment mode to "LOCAL_TEST". In fact, you could reduce the following code to one line: `if __name__ == "__main__": data_flow(mock_event_data())`, but I like to have the different options combined here. 
+It is possible to run this flow locally on your computer by feeding in some mocked data for the `event_message`. You don't necessarily need the entso-e api key for a first test run, but the newsletters data will be outdated and miss some information. All you have to prepare for this, is the "Prefect" step of the following [Prerequisits](#prerequisites-to-run-the-dataflow), you may want to set the `entsoe_api_key=""`, if you don't have one so far, and the deployment mode to `"LOCAL_TEST"`. In fact, you could reduce the following code to one line: `if __name__ == "__main__": data_flow(mock_event_data())`, but I like to have the different options combined here. 
 ```python
 # dataflow.py
 
@@ -197,7 +241,7 @@ Great, but at a certain point we want to close our laptop, and everything should
 1) Serving flows on long-lived infrastructure: start a long-running process with the **.serve()** method in a location of choice  (often within a Docker container) that is responsible for managing all of the runs for the associated deployment(s). The process stays in communication with Prefect API and monitors and executes each flow run. It is simple, fast and the user has maximum control over infrastructure, but since it is a long running process, it is more costly since infrastructure must run the whole time.
 2) Dynamically provisioning infrastructure with workers: **.deploy()** a flow to a work pool and then a worker will pick it up to execute the flow run on your infrastructure. In pull work pools you need to set up and maintain your own worker (but we will use the new push work pool feature). The infrastructure is ephemeral and dynamically provisioned, which allows to essentially "scale to zero" when nothing is running, as the worker process is much more lightweight than the workflows themselves, which is a big advantage. On the other hand, it is a more complex approach since a worker has more components and may be more difficult to set up and understand.
 
-We will opt for the second approach and deploy() or flow, which has recently become much easier with the push work pools. However, since we are using multiple frameworks here, we must first complete the following prerequisites.
+We will opt for the second approach and deploy() our flow, which has recently become much easier with the push work pools. However, since we are using multiple frameworks here, we must first complete the following prerequisites.
 
 > **_NOTE:_** unfortunately it takes some time until the entso-e access is granted, but in the meantime you may want to get familiar with all the other frameworks and resources
 
@@ -273,6 +317,7 @@ prefect work-pool create --type ecs:push my_push_work-pool --provision-infra
 This option provides seamless automatic provisioning of the AWS infrastructure. Only the AWS credentials need to be provided, Prefect will then create the essential components such as ECS cluster, IAM role and VPC on your behalf. Unfortunately, this option did not work for our setup configuration. Moreover, if you want to have full control over all configurations for the AWS components and policies, you need to create the infrastructure by yourself. In this context, the Pulumi framework proves to be very useful and a sophisticated solution.
  
 ### Prefect Event Webhooks and Deployment Triggers (Automations)
+
 OK, now we have defined our flow and the necessary AWS infrastructure, but how can we catch the message from the entso-e web service with Prefect and how can we feed the message data into our flow? That's exactly where Prefect webhooks and automations come into play. They will make our flow run event-driven.  
 A Prefect webhook exposes a public and unique URL endpoint to receive events from other systems (such as the entso-e web service, but usually you would point [some other webhook] to it) and transforms them into Prefect events, which are logged and can be used in Prefect automations. They are defined by a template like the following in the terminal, but you can also create them in Prefect Cloud UI:
 ```bash
