@@ -6,8 +6,10 @@ from prefect_email import EmailServerCredentials, email_send_message
 from prefect import task, flow
 from prefect.blocks.system import Secret
 from entsoe.parsers import parse_generation as entsoe_generation_parser
+from entsoe.mappings import lookup_area
 from entsoe import EntsoePandasClient
 import pandas as pd
+import re
 
 from etl.utils import User, get_users
 from etl.utils import mock_event_data
@@ -18,15 +20,26 @@ def extract_event_payload(event_msg: str) -> str:
     return event_msg.split("<msg:Payload>")[1]
 
 
+@task(log_prints=True)
+def extract_region(payload_str: str) -> str:
+    pattern = r">([^<]+)</inBiddingZone_Domain\.mRID>"
+    match = re.search(pattern, payload_str)
+    region = ""
+    if match:
+        region = match.group(1)
+    return region
+
+
 @task(retries=3, retry_delay_seconds=30, log_prints=True)
-def extract_installed_capacity() -> pd.DataFrame:
+def extract_installed_capacity(region: str) -> pd.DataFrame:
     # entsoe_api_key = "" # if you don't have one yet
     entsoe_api_key = Secret.load("entsoe-api-key").get()
     now = pd.Timestamp.today(tz="Europe/Brussels")
     e_client = EntsoePandasClient(entsoe_api_key)
+
     try:
         return e_client.query_installed_generation_capacity(
-            "DE",
+            region,
             start=pd.Timestamp(year=now.year, month=1, day=1, tz="Europe/Brussels"),
             end=now,
         )
@@ -48,45 +61,49 @@ def transform_data(xml_str: str, installed_capacity_df: pd.DataFrame) -> Dict[st
     ]
     generation_type = generation_forecast_df.columns[0]
 
-    result_df = pd.DataFrame(
-        data={
-            "forecast": generation_forecast_df[generation_type],
-            "installed": installed_capacity_df.get(
-                generation_type, default=pd.Series([0])
-            ).iloc[0],
-        },
-        index=generation_forecast_df.index,
-    )
-
-    chart_data = []
-    for index, row in result_df.iterrows():
-        # only applies for mocked mode
-        installed = v if (v := row["installed"]) > 0 else row["forecast"]
-
-        percentage = int(row["forecast"] / installed * 100)
-        chart_data.append(
-            f"{index} | {'#'*percentage}{'_'*(100-percentage)}"
-            f"  => {percentage}% ({row['forecast']}MW/{row['installed']}MW)"
+    try:
+        result_df = pd.DataFrame(
+            data={
+                "forecast": generation_forecast_df[generation_type],
+                "installed": installed_capacity_df[generation_type].iloc[0],
+            },
+            index=generation_forecast_df.index,
         )
+
+        chart_data = []
+        for index, row in result_df.iterrows():
+            percentage = int(row["forecast"] / row["installed"] * 100)
+            chart_data.append(
+                f"{index} | {'#'*percentage}{'_'*(100-percentage)}"
+                f"  => {percentage}% ({row['forecast']}MW/{row['installed']}MW)"
+            )
+
+    except KeyError:
+        result_df = generation_forecast_df
+        chart_data = [
+            f"Installed capacity for {generation_type} not available.",
+            "Please find the data from your entso-e subscribtion the below:",
+        ]
     return {"chart": "<br>".join(chart_data), "df": result_df, "title": generation_type}
 
 
 @flow(retries=3, retry_delay_seconds=30)
-def send_newsletters(data: Dict[str, Any]) -> None:
+def send_newsletters(data: Dict[str, Any], region_code: str) -> None:
     """in this example the data won't be loaded into a database,
     but will be sent to registered users
     """
     email_server_credentials = EmailServerCredentials.load("my-email-credentials")
     users: List[User] = get_users()
+    region = lookup_area(region_code).meaning
 
     for user in users:
         line1 = f"Hello {user.name}, <br>"
         line2 = "Please find our lastest update on: <br><br>"
-        line3 = f"<h1>Intraday Generation (Forecasts) and  Installed Capacity for Generation Type: {data['title']}</h1>"
+        line3 = f"<h1>Generation (Forecasts) for {data['title']} - {region}</h1>"
         # this is a prefect task:
         email_send_message.with_options(name="send-user-newsletter").submit(
             email_server_credentials=email_server_credentials,
-            subject=f"Newsletter: Intraday Generation: {data['title']}",
+            subject=f"Newsletter: Generation {data['title']} - {region}",
             msg=line1
             + line2
             + line3
@@ -100,9 +117,10 @@ def send_newsletters(data: Dict[str, Any]) -> None:
 @flow
 def data_flow(event_msg: str) -> None:
     event_payload = extract_event_payload(event_msg)
-    installed_capacity = extract_installed_capacity()
+    region = extract_region(event_payload)
+    installed_capacity = extract_installed_capacity(region)
     data = transform_data(event_payload, installed_capacity)
-    send_newsletters(data)
+    send_newsletters(data, region)
 
 
 if __name__ == "__main__":
@@ -116,7 +134,7 @@ if __name__ == "__main__":
     )
 
     ### Set your preferred flow run/ deployment mode here:
-    deploy_mode = DeployModes.ECS_PUSH_WORK_POOL
+    deploy_mode = DeployModes.LOCAL_TEST
 
     if deploy_mode == DeployModes.LOCAL_TEST:
         # test flow with mocked event data
