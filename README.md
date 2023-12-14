@@ -1,6 +1,6 @@
 # Orchestrating Event-Driven Serverless Data Pipelines with Prefect + Pulumi + AWS
 ## Content
-An example project showcasing how to use the latest features of Prefect such as AWS ECS Push Work Pool, Webhook & Automation.
+This is an example project showcasing how to use the latest features of Prefect such as AWS ECS Push Work Pool, Webhook & Automation.
 The goal is to automatically detect and process incoming data from entso-e Transparency Platform and orchestrate the dataflow serverless with Python. A combination of Prefect, Pulumi, GitHub Actions and AWS services is used.
 
 <center>
@@ -12,7 +12,7 @@ The goal is to automatically detect and process incoming data from entso-e Trans
 
 >## Table of Contents
 >- [Motivation](#motivation)
->- [Framework Choices](#framework-choices)
+>- [Framework Choices](#framework-choices)regularly
 >   - [Why Prefect](#why-prefect)
 >   - [Why Pulumi](#why-pulumi)
 >   - [Why AWS ECS](#why-aws-ecs)
@@ -29,13 +29,21 @@ The goal is to automatically detect and process incoming data from entso-e Trans
 
 
 ## Motivation
-todo: ...small motivation text on workflow orchestration and event driven data pipelines...
+>Serverless, event-driven data pipelines are a natural fit for modern data engineering, as they provide a scalable, cost-effective, and flexible way to process large volumes of data on demand.
+
+In general, data pipelines provide a systematic and automated approach to collecting, transforming and structuring large amounts of data from multiple sources. The ultimate goal is to making them available for example for data analysis, data visualization, or machine learning tasks.
+
+To make this process serverless, frees data engineers and scientists from the burden of infrastructure management and allows them to focus on building and implementing data workflows without worrying about provisioning and scaling servers. But the downside is, that users have to pay for the service and computing resources.
+
+In this context, event-driven processing not only enables responsiveness to real-time events in the data environment and dynamic execution of tasks. It also enables cost-efficient data processing, as computing resources scale automatically and are allocated dynamically and on demand. Users only pay for the computing resources that are actually used during data processing.
+
+In this post, we will explore how to combine different frameworks such as Prefect, Pulumi and GitHub to build and deploy an event-driven, serverless datapipeline.
 
 ## Framework Choices
-If you are a Python enthusiast like me,  
-- this is exactly the right reading for you, as all the frameworks we will use offer the possibility to leverage Python.
+If you are a Python enthusiast like me:  
+- this is exactly the right reading for you, as all the frameworks we will use offer the possibility to leverage Python.   
 
-Else:
+Else:  
 - let me show you what is possible with Python beyond pure coding... :smile: 
 
 ### Why Prefect?
@@ -382,32 +390,34 @@ The webhook then triggers the automation and finally, the registered user(s) wil
 ## Conclusion
 TODO: write a small conclusion
 
-[Prefect Cloud]:    https://www.prefect.io
-[Prefect Docs]:     https://docs.prefect.io/latest/ 
-[Authenticate with Prefect Cloud]: https://www.youtube.com/watch?v=AjYHBwH2Mtc
-[Pulumi]:           https://www.pulumi.com
-[entso-e Transparency Platform]:          https://transparency.entsoe.eu/
-[Restful API Access]: https://transparency.entsoe.eu/content/static_content/Static%20content/web%20api/Guide.html#:~:text=To%20request%20access%20to%20the,registration%20in%20the%20email%20body.
-[Data Consumer Subscription rights]:https://transparency.entsoe.eu/content/static_content/Static%20content/knowledge%20base/SubscriptionGuide.html
-[AWS]:              https://aws.amazon.com/de/free/?trk=10e7ff14-4e14-49d5-9724-e9c8df2821ae&sc_channel=ps&ef_id=CjwKCAiAg9urBhB_EiwAgw88mcWBW6hImZSWUyh0-t_zQNfiTZfOi2SGJdRIStcNeCdGJjCOy7kI-hoCFI0QAvD_BwE:G:s&s_kwcid=AL!4422!3!645186168181!p!!g!!aws!19571721561!148952143087&gclid=CjwKCAiAg9urBhB_EiwAgw88mcWBW6hImZSWUyh0-t_zQNfiTZfOi2SGJdRIStcNeCdGJjCOy7kI-hoCFI0QAvD_BwE&all-free-tier.sort-by=item.additionalFields.SortRank&all-free-tier.sort-order=asc&awsf.Free%20Tier%20Types=*all&awsf.Free%20Tier%20Categories=*all
-[AWS service restrictions]: https://aws.amazon.com/de/free/?trk=9ab5159b-247d-4917-a0ec-ec01d1af6bf9&sc_channel=ps&ef_id=CjwKCAiAg9urBhB_EiwAgw88mR4zIZm3AgYc3nAc8kv0RRY4Xuw8AkUcQPEHsTah8OpQvjUdPo1AzxoC_YQQAvD_BwE:G:s&s_kwcid=AL!4422!3!645133561113!e!!g!!aws%20free%20trial!19579657595!152087369904&gclid=CjwKCAiAg9urBhB_EiwAgw88mR4zIZm3AgYc3nAc8kv0RRY4Xuw8AkUcQPEHsTah8OpQvjUdPo1AzxoC_YQQAvD_BwE&all-free-tier.sort-by=item.additionalFields.SortRank&all-free-tier.sort-order=asc&awsf.Free%20Tier%20Types=tier%2312monthsfree&awsf.Free%20Tier%20Categories=*all
+[Prefect Cloud]:                        https://www.prefect.io
+[Prefect Docs]:                         https://docs.prefect.io/latest/ 
+[Authenticate with Prefect Cloud]:      https://www.youtube.com/watch?v=AjYHBwH2Mtc
+[Pulumi]:                               https://www.pulumi.com
+[entso-e Transparency Platform]:        https://transparency.entsoe.eu/
+[Restful API Access]:                   https://transparency.entsoe.eu/content/static_content/Static%20content/web%20api/Guide.html#:~:text=To%20request%20access%20to%20the,registration%20in%20the%20email%20body.
+[Data Consumer Subscription rights]:    https://transparency.entsoe.eu/content/static_content/Static%20content/knowledge%20base/SubscriptionGuide.html
+[AWS]:                                  https://aws.amazon.com/de/free/?trk=10e7ff14-4e14-49d5-9724-e9c8df2821ae&sc_channel=ps&ef_id=CjwKCAiAg9urBhB_EiwAgw88mcWBW6hImZSWUyh0-t_zQNfiTZfOi2SGJdRIStcNeCdGJjCOy7kI-hoCFI0QAvD_BwE:G:s&s_kwcid=AL!4422!3!645186168181!p!!g!!aws!19571721561!148952143087&gclid=CjwKCAiAg9urBhB_EiwAgw88mcWBW6hImZSWUyh0-t_zQNfiTZfOi2SGJdRIStcNeCdGJjCOy7kI-hoCFI0QAvD_BwE&all-free-tier.sort-by=item.additionalFields.SortRank&all-free-tier.sort-order=asc&awsf.Free%20Tier%20Types=*all&awsf.Free%20Tier%20Categories=*all
+[AWS service restrictions]:             https://aws.amazon.com/de/free/?trk=9ab5159b-247d-4917-a0ec-ec01d1af6bf9&sc_channel=ps&ef_id=CjwKCAiAg9urBhB_EiwAgw88mR4zIZm3AgYc3nAc8kv0RRY4Xuw8AkUcQPEHsTah8OpQvjUdPo1AzxoC_YQQAvD_BwE:G:s&s_kwcid=AL!4422!3!645133561113!e!!g!!aws%20free%20trial!19579657595!152087369904&gclid=CjwKCAiAg9urBhB_EiwAgw88mR4zIZm3AgYc3nAc8kv0RRY4Xuw8AkUcQPEHsTah8OpQvjUdPo1AzxoC_YQQAvD_BwE&all-free-tier.sort-by=item.additionalFields.SortRank&all-free-tier.sort-order=asc&awsf.Free%20Tier%20Types=tier%2312monthsfree&awsf.Free%20Tier%20Categories=*all
 
-[push work pools]: https://github.com/PrefectHQ/prefect/blob/3a73fc6b0976332972fd62d037c30a31c04448e9/docs/guides/deployment/push-work-pools.md
-[event-driven data pipelines]: https://www.youtube.com/watch?v=khVS5M3QY54
-[scheduled]: https://www.youtube.com/watch?v=hKD-Tw_pnYc 
-[real-time]: https://annageller.medium.com/serverless-real-time-data-pipelines-on-aws-with-prefect-ecs-and-github-actions-1737c80da3f5#655e
-[article]: https://annageller.medium.com/serverless-real-time-data-pipelines-on-aws-with-prefect-ecs-and-github-actions-1737c80da3f5#655e#:~:text=Configure%20repository%20secrets
-[7]: https://annageller.medium.com/serverless-real-time-data-pipelines-on-aws-with-prefect-ecs-and-github-actions-1737c80da3f5
-[serverless on GitHub]: https://github.com/hashboard-hq/examples/tree/main/snow_leaderboard
-[GitHub repo]: https://github.com/mt7180/prefect-pulumi-data-orchestration
-[virtual environment]:https://www.youtube.com/watch?v=UqkT2Ml9beg
-[prefect.yaml]:https://docs.prefect.io/latest/guides/prefect-deploy/#:~:text=prefect.yaml
-[AWS ECS architecture]: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/launch_types.html
-[AWS Task Definition]: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-definition-template.html
-[adjust the job template]: https://www.youtube.com/live/1tv6w22o7mI?si=mDngWuC6zJRkXRKG&t=2031
-[Prefect Push Work Pool Setup]: https://www.youtube.com/live/1tv6w22o7mI?si=soe8OFqf9KHI_Tg_&t=1600
-[AWS ECS Fargate architecture]: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/launch_types.html
-[--provision-infra]: https://github.com/PrefectHQ/prefect/pull/11267
-[some other webhook]: https://www.youtube.com/watch?v=khVS5M3QY54
-[event driven example]: https://medium.com/the-prefect-blog/beyond-scheduling-event-driven-flows-with-prefect-b072edd06833
-[data_flow]:https://github.com/mt7180/prefect-pulumi-data-orchestration/blob/2840c265b5303d64c7ebd545404219a3c7021342/etl/dataflow.py#L101
+[push work pools]:                      https://github.com/PrefectHQ/prefect/blob/3a73fc6b0976332972fd62d037c30a31c04448e9/docs/guides/deployment/push-work-pools.md
+[event-driven data pipelines]:          https://www.youtube.com/watch?v=khVS5M3QY54
+[scheduled]:                            https://www.youtube.com/watch?v=hKD-Tw_pnYc 
+[real-time]:                            https://annageller.medium.com/serverless-real-time-data-pipelines-on-aws-with-prefect-ecs-and-github-actions-1737c80da3f5#655e
+
+[article]:                              https://annageller.medium.com/serverless-real-time-data-pipelines-on-aws-with-prefect-ecs-and-github-actions-1737c80da3f5#655e#:~:text=Configure%20repository%20secrets
+
+[serverless on GitHub]:                 https://github.com/hashboard-hq/examples/tree/main/snow_leaderboard
+[GitHub repo]:                          https://github.com/mt7180/prefect-pulumi-data-orchestration
+[virtual environment]:                  https://www.youtube.com/watch?v=UqkT2Ml9beg
+[prefect.yaml]:                         https://docs.prefect.io/latest/guides/prefect-deploy/#:~:text=prefect.yaml
+[AWS ECS architecture]:                 https://docs.aws.amazon.com/AmazonECS/latest/developerguide/launch_types.html
+[AWS Task Definition]:                  https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-definition-template.html
+[adjust the job template]:              https://www.youtube.com/live/1tv6w22o7mI?si=mDngWuC6zJRkXRKG&t=2031
+[Prefect Push Work Pool Setup]:         https://www.youtube.com/live/1tv6w22o7mI?si=soe8OFqf9KHI_Tg_&t=1600
+[AWS ECS Fargate architecture]:         https://docs.aws.amazon.com/AmazonECS/latest/developerguide/launch_types.html
+[--provision-infra]:                    https://github.com/PrefectHQ/prefect/pull/11267
+[some other webhook]:                   https://www.youtube.com/watch?v=khVS5M3QY54
+[event driven example]:                 https://medium.com/the-prefect-blog/beyond-scheduling-event-driven-flows-with-prefect-b072edd06833
+
+[data_flow]:                            https://github.com/mt7180/prefect-pulumi-data-orchestration/blob/2840c265b5303d64c7ebd545404219a3c7021342/etl/dataflow.py#L101
