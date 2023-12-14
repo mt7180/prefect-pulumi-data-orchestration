@@ -377,25 +377,32 @@ We initially deploy the flow from our local computer to Prefect Cloud (or via Gi
 The automation will wait for any Prefect event emitted by the webhook (or any other Prefect event with the same resource id, which we will finally see as last step of the initializing GitHub Action). So, when the entso-e message with a data update hits our webhook, a flow run is triggered immediately by the automation (with the entso-e data passed in) and the work pool will submit the flow run to the serverless AWS infrastructure, which we specified in the job_variables. Therefore, Prefect provides the AWS ECS API with metadata which include the full task definition parameter set, which is used in turn to generate an ECS task. The task is provided with the flow Docker image url and is specified to run our flow from the image.  
 
 ## The GitHub Actions
-Finally, we will use Github Actions to automatically set-up the whole AWS infrastructure, create a Prefect work pool and a webhook, and deploy the flow to it with a Deployment trigger assigned. Finally, the GitHub Action will fire a test event to the automation, so that we can see everything in action. You will need to pass in your preferred AWS region and the aws_credential_block_id. You can get the id by executing `prefect blocks ls` in your terminal.
+Finally, we will use Github Actions to automatically set-up the whole AWS infrastructure, create a Prefect work pool and a webhook, and deploy the flow to it with a Deployment trigger assigned. As last step, the GitHub Action will fire a test event to the automation, so that we can see everything in action. You will need to pass in your preferred AWS region and the aws_credential_block_id. You can get the id by executing `prefect blocks ls` in your terminal after you created the AWS Credentials Block in the Prefect Cloud UI.
 
-So in fact, once everything is configured (prerequisites!), you can set up the deployment of the whole infrastructure and the flow all at once, with only one click on GitHub: 
+So in fact, once everything is configured (prerequisites!), you can set up the deployment of the whole infrastructure and the flow all at once, with only one click on GitHub (gh_action_init_dataflows.yml): 
 
 ![run github action](./images/run_gh_action.png)
-Th 
+The GitHub Action has 2 jobs, first it creates the AWS infrastructure and then it deploys the flow to Prefect API, utilizing the received infrastructure identifying names from the previous step. If you are interested, you can inspect every step and output on GitHub.
 
 ![success github action](./images/success_gh_action.png)
 
-After subscribing for the entso-e web service (for example for the Generation Forecasts for Wind and Solar), the data will arrive regularly (on update) at the webhook endpoint, which can be observed in the Events Feed:
+The webhook and automation are now alive and wait for incoming data/ events.
+You can find the webhooks url in Prefect Cloud UI. You will now have to copy the url and create a subscribtion channel on entso-e platform. The next step is to subscribe for a specific entso-e web service (for example for the Generation Forecasts for Wind and Solar) by clicking the button directly above the desired diagram on entso-e transparency platform. The data will arrive at the webhooks endpoint as soon as entso-e sends an update message. You may want to observe this in the Events Feed:
   
 ![prefect events](./images/Prefect_events.png)
   
-The webhook then triggers the automation and finally, the registered user(s) will get an automated newsletter, when new data from entso-e arrives:
+After catching the data message, the webhook triggers the automation and finally, the registered user(s) will get their automated, on demand newsletter, as soon as new data from entso-e arrives:
 
 .... TODO: image of newsletter
 
+
+Now, that we have reached the end of the tutorial, you may want to delete the whole AWS infrastructure, that we have just created. All you have to do is to run the next GitHub Action (gh_action_delete_infra.yml) and provide again (the same!) AWS region and ecr repo name. You will find the ecr repo name in the AWS management console or you can just refer to the initializing GitHub Action output.
+
 ## Conclusion
 TODO: write a small conclusion
+
+
+
 
 [Prefect Cloud]:                        https://www.prefect.io
 [Prefect Docs]:                         https://docs.prefect.io/latest/ 
