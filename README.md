@@ -31,13 +31,13 @@ The goal is to automatically detect and process incoming data from entso-e Trans
 ## Motivation
 >Serverless, event-driven data pipelines are a natural fit for modern data engineering, as they provide a scalable, cost-effective, and flexible way to process large volumes of data on demand.
 
-In general, data pipelines provide a systematic and automated approach to collecting, transforming and structuring large amounts of data from multiple sources. The ultimate goal is to making them available for example for data analysis, data visualization, or machine learning tasks.
+In general, data pipelines provide a systematic and automated approach to collecting, transforming and structuring large amounts of data from multiple sources. The ultimate goal is to making them available e.g. for data analysis, data visualization, or machine learning tasks.
 
 To make this process serverless, frees data engineers and scientists from the burden of infrastructure management and allows them to focus on building and implementing data workflows without worrying about provisioning and scaling servers. But the downside is, that users have to pay for the service and computing resources.
 
 In this context, event-driven processing not only enables responsiveness to real-time events in the data environment and dynamic execution of tasks. It also enables cost-efficient data processing, as computing resources scale automatically and are allocated dynamically and on demand. Users only pay for the computing resources that are actually used during data processing.
 
-In this post, we will explore how to combine different frameworks such as Prefect, Pulumi and GitHub to build and deploy an event-driven, serverless datapipeline.
+In this post, we will explore how to combine different frameworks such as Prefect, Pulumi and GitHub to build and deploy an event-driven, serverless datapipeline to AWS.
 
 ## Framework Choices
 If you are a Python enthusiast like me:  
@@ -298,6 +298,13 @@ The .deploy method will build a Docker image with your flow code baked into it a
 
 ## Prefects new ECS Push Work Pool
 In general, a flow is deployed to a work pool for scheduling. Traditionally, a worker (running in the execution environment) had to poll the work pool for new flow runs to execute (pull work pools), but now [push work pools] can submit flow runs to serverless infrastructure like Cloud Run, Azure Container Instances, and AWS ECS Fargate directly, without the need for an agent or worker to run. This makes the set-up a lot easier.  
+
+The following high-level overview shows the conceptual elements involved in defining a `push` work pool based deployment. 
+
+![](./images/overview_push_components.png)
+
+It is an adaption of the [official diagram] by Prefect, which shows the `pull` work-pool based deployment and involves a running worker process.  
+
 When you create the ECS push work pool (you can do this directly in the Prefect Cloud UI, but we will create it with our GitHub action by prefect cli), you don't have to set any of the job template parameters, as long as you submit them via the job_variables parameter of the flow deployment. The deployment-specific job variables always overwrite the work pool job template values. On the other hand, if you want to (and if they do not change), you can pre-populate the work pool job template with your infrastructure specific information, then you don't have to feed in the information with each deploment. But since we use pulumi to set-up our infrastructure, we won't have this information in advance, we will submit them via the job variables in the deployment step of the GitHub Action (gh_action_init_dataflow.yml).
 
 >**_ADVANCED:_** If you are already familiar with the [AWS Task Definition], you might have noticed, that not all parameters of the Task Definition Template are available in the base job template of the Prefect ECS (push) work pool. It is very easy to [adjust the job template], if you need to set a specific task definition parameter, the linked video shows how to do this in the Prefect Cloud UI. In short: put the desired parameter to the underlaying work pool json definition (advanced tab of the work pool configuration), to ingest the needed parameters AND assign it also to the desired task definition parameter down at the bottom in the job configuration section (in jinja notation!).  
@@ -370,12 +377,12 @@ We initially deploy the flow from our local computer to Prefect Cloud (or via Gi
 The automation will wait for any Prefect event emitted by the webhook (or any other Prefect event with the same resource id, which we will finally see as last step of the initializing GitHub Action). So, when the entso-e message with a data update hits our webhook, a flow run is triggered immediately by the automation (with the entso-e data passed in) and the work pool will submit the flow run to the serverless AWS infrastructure, which we specified in the job_variables. Therefore, Prefect provides the AWS ECS API with metadata which include the full task definition parameter set, which is used in turn to generate an ECS task. The task is provided with the flow Docker image url and is specified to run our flow from the image.  
 
 ## The GitHub Actions
-Finally, we will use Github Actions to automatically set-up the whole AWS infrastructure, create a Prefect work pool and a webhook, and deploy the flow to it with a Deployment trigger assigned. Finally, the GitHub Action will fire a test event to the automation, so that we can see everything in action. You will need to pass in your preferred aws region and the aws_credential_block_id. You can get the id by executing `prefect blocks ls` in your terminal.
+Finally, we will use Github Actions to automatically set-up the whole AWS infrastructure, create a Prefect work pool and a webhook, and deploy the flow to it with a Deployment trigger assigned. Finally, the GitHub Action will fire a test event to the automation, so that we can see everything in action. You will need to pass in your preferred AWS region and the aws_credential_block_id. You can get the id by executing `prefect blocks ls` in your terminal.
 
-So in fact, once everything is configured (prerequisites!), you can set up the deployment of the infrastructure and the flow with only one click in GitHub.   
+So in fact, once everything is configured (prerequisites!), you can set up the deployment of the whole infrastructure and the flow all at once, with only one click on GitHub: 
 
 ![run github action](./images/run_gh_action.png)
-->  
+Th 
 
 ![success github action](./images/success_gh_action.png)
 
@@ -421,3 +428,4 @@ TODO: write a small conclusion
 [event driven example]:                 https://medium.com/the-prefect-blog/beyond-scheduling-event-driven-flows-with-prefect-b072edd06833
 
 [data_flow]:                            https://github.com/mt7180/prefect-pulumi-data-orchestration/blob/2840c265b5303d64c7ebd545404219a3c7021342/etl/dataflow.py#L101
+[official diagram]: https://docs.prefect.io/latest/guides/prefect-deploy/#:~:text=high-level%20overview
