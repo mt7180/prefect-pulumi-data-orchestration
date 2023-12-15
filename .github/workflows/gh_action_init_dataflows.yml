@@ -61,15 +61,7 @@ jobs:
           stack-name: ${{ github.actor }}/ecs-flow-infrastructure/dev
           work-dir: ./infrastructure
         env:
-          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
-
-      - run: |
-          echo "Current AWS ECR Repository: ${{ steps.pulumi.outputs.ecr_repo_url }}" >> $GITHUB_STEP_SUMMARY
-          echo "Current AWS ECS Cluster arn: ${{ steps.pulumi.outputs.ecs_cluster_arn }}" >> $GITHUB_STEP_SUMMARY
-          echo "Current AWS VPC id: ${{ steps.pulumi.outputs.vpc_id }}" >> $GITHUB_STEP_SUMMARY
-          echo "Current AWS iam task role arn: ${{ steps.pulumi.outputs.iam_task_role_arn }}" >> $GITHUB_STEP_SUMMARY
-          echo "Current AWS iam execution role arn ${{ steps.pulumi.outputs.iam_execution_role_arn }}" >> $GITHUB_STEP_SUMMARY
-          
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}  
 
       - name: Create AWS Infrastructure Summary
         run: echo "AWS Infrastructure build at $(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_STEP_SUMMARY

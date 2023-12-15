@@ -137,7 +137,7 @@ if __name__ == "__main__":
     )
 
     ### Set your preferred flow run/ deployment mode here:
-    deploy_mode = DeployModes.LOCAL_TEST
+    deploy_mode = DeployModes.ECS_PUSH_WORK_POOL
 
     if deploy_mode == DeployModes.ECS_PUSH_WORK_POOL:
         # test flow with mocked event data
