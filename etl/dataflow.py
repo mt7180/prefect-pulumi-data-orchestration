@@ -78,7 +78,7 @@ def transform_data(xml_str: str, installed_capacity_df: pd.DataFrame) -> Dict[st
 
         chart_data = []
         for index, row in result_df.iterrows():
-            percentage = int(row["generation"] / row["installed"] * 100)
+            percentage = round(row["generation"] / row["installed"] * 100)
             chart_data.append(
                 f"{index} | {'#'*percentage}{'_'*(100-percentage)}"
                 f"  => {percentage}% ({row['generation']}MW/{row['installed']}MW)"
