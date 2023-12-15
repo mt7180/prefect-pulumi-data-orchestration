@@ -404,11 +404,11 @@ So in fact, once everything is configured (prerequisites!), you can set up the d
 
 ![run github action](./images/run_gh_action.png)
 
-The GitHub Action has 2 jobs, first it creates the AWS infrastructure and then it deploys the flow to Prefect API, utilizing the received infrastructure identifying names from the previous step. If you are interested, you can inspect every step and output on GitHub.
+As you might have recognized, the GitHub Action has 2 jobs, first it creates the AWS infrastructure and then it deploys the flow to Prefect API, utilizing the received infrastructure identifying names from the previous step. If you are interested, you can inspect every step and output on GitHub.
 
 ![success github action](./images/success_gh_action.png)
 
-The webhook and automation are now alive and wait for incoming data/ events.
+The webhook and automation are now alive and are waiting for incoming data/ events.
 You can find the webhooks url in Prefect Cloud UI. You need to copy the url and create a subscribtion channel on entso-e platform. The next step is to subscribe for a specific entso-e web service (for example for the Generation Forecasts for Wind and Solar) by clicking the button directly above the desired diagram on entso-e transparency platform.   
 
 ![entsoe subscription](./images/entso-e_subscription.png)
@@ -425,11 +425,10 @@ After catching the data message, the webhook triggers the automation and finally
 Now, that we have reached the end of the tutorial, you may want to delete the whole AWS infrastructure, that we have just created. All you have to do is to run the next GitHub Action (gh_action_delete_infra.yml) and provide again (the same!) AWS region and ecr repo name. You will find the ecr repo name in the AWS management console or you can just refer to the initializing GitHub Action output.
 
 ## Conclusion
-TODO: write a small conclusion
+In this tutorial, we have explored how to effectively combine the frameworks Prefect and Pulumi (among some other) to successfully build an event-driven serverless datapipeline that automatically receives the updates from the Entso-e Web Service, transform the data and then send a newsletter to registered users. 
+We have accomplished that the AWS infrastructure and the Prefect flow can be deployed all in one step seamlessly and automatically without giving away control over AWS policies and cluster settings. In addition, by using a prefect ECS push workpool, we have found a cost-efficient solution in which a task is only executed on the ECS cluster when data actually needs to be processed.
 
-
-In this tutorial, we have explored how to effectively combine different frameworks to successfully build an event-driven serverless datapipeline that we can use to automatically receive the updates of the Entso-e Web Service, transform the data and then send a newsletter to registered users. 
-We have accomplished that the AWS infrastructure and the Prefect flow can be deployed seamlessly and automatically without giving away control over AWS policies and cluster settings. In addition, by using a prefect ECS push workpool, we have found a cost-efficient solution in which a task is only executed on the ecs cluster when data actually needs to be processed.
+If you have any questions about this setup or something is unclear, please do not hesitate to contact me.
 
 
 [Prefect Cloud]:                        https://www.prefect.io
