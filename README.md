@@ -273,7 +273,7 @@ We will opt for the second approach and deploy() our flow to run serverless, whi
 ### Entso-e
 - Sign up for the [entso-e Transparency Platform]
 - Get [Restful API Access]
-- Get [Data Consumer Subscription rights] and subscribe to a data feed 
+- Get Data Consumer [Subscription] rights and subscribe to a data feed 
 ### AWS 
 *to run our flow on AWS ECS Fargate, we will need the following configurations:*
 - Sign up for AWS (you will be prompted for your Credit Card Number, but you get a free first year for trial usage which has some [AWS service restrictions])
@@ -409,7 +409,7 @@ As you might have recognized, the GitHub Action has 2 jobs, first it creates the
 ![success github action](./images/success_gh_action.png)
 
 The webhook and automation are now alive and are waiting for incoming data/ events.
-You can find the webhooks url in Prefect Cloud UI. You need to copy the url and create a subscribtion channel on entso-e platform. The next step is to subscribe for a specific entso-e web service (for example for the Generation Forecasts for Wind and Solar) by clicking the button directly above the desired diagram on entso-e transparency platform.   
+You can find the webhooks url in Prefect Cloud UI. You need to copy the url and create a [Subscription] Channel on entso-e platform. The next step is to subscribe for a specific entso-e web service (for example for "Generation Forecasts for Wind and Solar" or "Actual Generation per Production Type", the latter arrives every hour while the forecast will be sent only once a day; you may want to select your country and the generation types of interest) by clicking the button directly above the desired diagram on entso-e transparency platform.   
 
 ![entsoe subscription](./images/entso-e_subscription.png)
 
@@ -419,10 +419,9 @@ The data will arrive at the webhooks endpoint as soon as entso-e sends an update
   
 After catching the data message, the webhook triggers the automation and finally, the registered user(s) will get their automated, on demand newsletter, as soon as new data from entso-e arrives:
 
-.... TODO: image of newsletter
-
-
-Now, that we have reached the end of the tutorial, you may want to delete the whole AWS infrastructure, that we have just created. All you have to do is to run the next GitHub Action (gh_action_delete_infra.yml) and provide again (the same!) AWS region and ecr repo name. You will find the ecr repo name in the AWS management console or you can just refer to the initializing GitHub Action output.
+![](./images/automation_triggered.png)
+       
+>Now, that we have reached the end of the tutorial, you may want to delete the whole AWS infrastructure, that we have just created. All you have to do is to run the next GitHub Action (gh_action_delete_infra.yml) and provide again (the same!) AWS region and ecr repo name. You will find the ecr repo name in the AWS management console or you can just refer to the initializing GitHub Action output.
 
 ## Conclusion
 In this tutorial, we have explored how to effectively combine the frameworks Prefect and Pulumi (among some others) to successfully build an event-driven serverless datapipeline that automatically receives the updates from the Entso-e Web Service, transforms the data and then sends a newsletter to registered users. 
@@ -437,7 +436,7 @@ If you have any questions about this setup or something is unclear, please do no
 [Pulumi]:                               https://www.pulumi.com
 [entso-e Transparency Platform]:        https://transparency.entsoe.eu/
 [Restful API Access]:                   https://transparency.entsoe.eu/content/static_content/Static%20content/web%20api/Guide.html#:~:text=To%20request%20access%20to%20the,registration%20in%20the%20email%20body.
-[Data Consumer Subscription rights]:    https://transparency.entsoe.eu/content/static_content/Static%20content/knowledge%20base/SubscriptionGuide.html
+[Subscription]:    https://transparency.entsoe.eu/content/static_content/Static%20content/knowledge%20base/SubscriptionGuide.html
 [AWS]:                                  https://aws.amazon.com/de/free/?trk=10e7ff14-4e14-49d5-9724-e9c8df2821ae&sc_channel=ps&ef_id=CjwKCAiAg9urBhB_EiwAgw88mcWBW6hImZSWUyh0-t_zQNfiTZfOi2SGJdRIStcNeCdGJjCOy7kI-hoCFI0QAvD_BwE:G:s&s_kwcid=AL!4422!3!645186168181!p!!g!!aws!19571721561!148952143087&gclid=CjwKCAiAg9urBhB_EiwAgw88mcWBW6hImZSWUyh0-t_zQNfiTZfOi2SGJdRIStcNeCdGJjCOy7kI-hoCFI0QAvD_BwE&all-free-tier.sort-by=item.additionalFields.SortRank&all-free-tier.sort-order=asc&awsf.Free%20Tier%20Types=*all&awsf.Free%20Tier%20Categories=*all
 [AWS service restrictions]:             https://aws.amazon.com/de/free/?trk=9ab5159b-247d-4917-a0ec-ec01d1af6bf9&sc_channel=ps&ef_id=CjwKCAiAg9urBhB_EiwAgw88mR4zIZm3AgYc3nAc8kv0RRY4Xuw8AkUcQPEHsTah8OpQvjUdPo1AzxoC_YQQAvD_BwE:G:s&s_kwcid=AL!4422!3!645133561113!e!!g!!aws%20free%20trial!19579657595!152087369904&gclid=CjwKCAiAg9urBhB_EiwAgw88mR4zIZm3AgYc3nAc8kv0RRY4Xuw8AkUcQPEHsTah8OpQvjUdPo1AzxoC_YQQAvD_BwE&all-free-tier.sort-by=item.additionalFields.SortRank&all-free-tier.sort-order=asc&awsf.Free%20Tier%20Types=tier%2312monthsfree&awsf.Free%20Tier%20Categories=*all
 
