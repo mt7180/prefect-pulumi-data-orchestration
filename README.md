@@ -425,7 +425,7 @@ After catching the data message, the webhook triggers the automation and finally
 Now, that we have reached the end of the tutorial, you may want to delete the whole AWS infrastructure, that we have just created. All you have to do is to run the next GitHub Action (gh_action_delete_infra.yml) and provide again (the same!) AWS region and ecr repo name. You will find the ecr repo name in the AWS management console or you can just refer to the initializing GitHub Action output.
 
 ## Conclusion
-In this tutorial, we have explored how to effectively combine the frameworks Prefect and Pulumi (among some other) to successfully build an event-driven serverless datapipeline that automatically receives the updates from the Entso-e Web Service, transform the data and then send a newsletter to registered users. 
+In this tutorial, we have explored how to effectively combine the frameworks Prefect and Pulumi (among some others) to successfully build an event-driven serverless datapipeline that automatically receives the updates from the Entso-e Web Service, transforms the data and then sends a newsletter to registered users. 
 We have accomplished that the AWS infrastructure and the Prefect flow can be deployed all in one step seamlessly and automatically without giving away control over AWS policies and cluster settings. In addition, by using a prefect ECS push workpool, we have found a cost-efficient solution in which a task is only executed on the ECS cluster when data actually needs to be processed.
 
 If you have any questions about this setup or something is unclear, please do not hesitate to contact me.
