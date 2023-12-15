@@ -20,26 +20,27 @@ def extract_event_payload(event_msg: str) -> str:
     return event_msg.split("<msg:Payload>")[1]
 
 
-@task(log_prints=True)
-def extract_region(payload_str: str) -> str:
+@task
+def extract_payload_region(payload_str: str) -> str:
     pattern = r">([^<]+)</inBiddingZone_Domain\.mRID>"
     match = re.search(pattern, payload_str)
-    region = ""
+    region_code = ""
     if match:
-        region = match.group(1)
-    return region
+        region_code = match.group(1)
+    return region_code
 
 
 @task(retries=3, retry_delay_seconds=30, log_prints=True)
-def extract_installed_capacity(region: str) -> pd.DataFrame:
-    # entsoe_api_key = "" # if you don't have one yet
+def extract_installed_capacity(region_code: str) -> pd.DataFrame:
+    # use the prefet Secret Block here, or
+    # set entsoe_api_key = "" if you don't have one yet:
     entsoe_api_key = Secret.load("entsoe-api-key").get()
     now = pd.Timestamp.today(tz="Europe/Brussels")
     e_client = EntsoePandasClient(entsoe_api_key)
 
     try:
         return e_client.query_installed_generation_capacity(
-            region,
+            region_code,
             start=pd.Timestamp(year=now.year, month=1, day=1, tz="Europe/Brussels"),
             end=now,
         )
@@ -84,6 +85,7 @@ def transform_data(xml_str: str, installed_capacity_df: pd.DataFrame) -> Dict[st
             f"Installed capacity for {generation_type} not available.",
             "Please find the data from your entso-e subscribtion the below:",
         ]
+
     return {"chart": "<br>".join(chart_data), "df": result_df, "title": generation_type}
 
 
@@ -92,6 +94,7 @@ def send_newsletters(data: Dict[str, Any], region_code: str) -> None:
     """in this example the data won't be loaded into a database,
     but will be sent to registered users
     """
+    # use the prefect Email Credentials Block here:
     email_server_credentials = EmailServerCredentials.load("my-email-credentials")
     users: List[User] = get_users()
     region = lookup_area(region_code).meaning
@@ -100,7 +103,7 @@ def send_newsletters(data: Dict[str, Any], region_code: str) -> None:
         line1 = f"Hello {user.name}, <br>"
         line2 = "Please find our lastest update on: <br><br>"
         line3 = f"<h1>Generation (Forecasts) for {data['title']} - {region}</h1>"
-        # this is a prefect task:
+        # this is a pre-defined prefect task:
         email_send_message.with_options(name="send-user-newsletter").submit(
             email_server_credentials=email_server_credentials,
             subject=f"Newsletter: Generation {data['title']} - {region}",
@@ -117,10 +120,10 @@ def send_newsletters(data: Dict[str, Any], region_code: str) -> None:
 @flow
 def data_flow(event_msg: str) -> None:
     event_payload = extract_event_payload(event_msg)
-    region = extract_region(event_payload)
-    installed_capacity = extract_installed_capacity(region)
+    region_code = extract_payload_region(event_payload)
+    installed_capacity = extract_installed_capacity(region_code)
     data = transform_data(event_payload, installed_capacity)
-    send_newsletters(data, region)
+    send_newsletters(data, region_code)
 
 
 if __name__ == "__main__":
@@ -136,7 +139,7 @@ if __name__ == "__main__":
     ### Set your preferred flow run/ deployment mode here:
     deploy_mode = DeployModes.LOCAL_TEST
 
-    if deploy_mode == DeployModes.LOCAL_TEST:
+    if deploy_mode == DeployModes.ECS_PUSH_WORK_POOL:
         # test flow with mocked event data
         #  and run it locally without deployment:
         data_flow(mock_event_data())

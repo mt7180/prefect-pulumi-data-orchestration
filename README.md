@@ -106,9 +106,10 @@ As promised, the data_flow workflow is a decorated python function and quite eas
 @flow
 def data_flow(event_message: str) -> None:
     event_payload = extract_event_payload(event_message)
-    installed_capacity = extract_installed_capacity()
+    region_code = extract_payload_region(event_payload)
+    installed_capacity = extract_installed_capacity(region_code)
     data = transform_data(event_payload, installed_capacity)
-    send_newsletters(data)
+    send_newsletters(data, region_code)
 ```
 
 When you feed in an `event_message`, the message payload will get extracted.
@@ -127,7 +128,10 @@ from prefect import task, flow
 from prefect.blocks.system import Secret
 from prefect_email import EmailServerCredentials, email_send_message
 from entsoe.parsers import parse_generation as entsoe_generation_parser
+from entsoe.mappings import lookup_area
 from entsoe import EntsoePandasClient
+import pandas as pd
+import re
 
 from etl.utils import User, get_users
 from etl.utils import mock_event_data
@@ -136,9 +140,10 @@ from etl.utils import mock_event_data
 @flow
 def data_flow(event_message: str) -> None:
     event_payload = extract_event_payload(event_message)
-    installed_capacity = extract_installed_capacity()
+    region_code = extract_payload_region(event_payload)
+    installed_capacity = extract_installed_capacity(region_code)
     data = transform_data(event_payload, installed_capacity)
-    send_newsletters(data)
+    send_newsletters(data, region_code)
 
 
 @task
@@ -146,17 +151,34 @@ def extract_event_payload(event_message: str) -> str:
     return event_message.split("<msg:Payload>")[1]
 
 
-@task(retries=3, retry_delay_seconds=30)
-def extract_installed_capacity() -> pd.DataFrame:
+@task
+def extract_payload_region(payload_str: str) -> str:
+    pattern = r">([^<]+)</inBiddingZone_Domain\.mRID>"
+    match = re.search(pattern, payload_str)
+    region_code = ""
+    if match:
+        region_code = match.group(1)
+    return region_code
+
+
+@task(retries=3, retry_delay_seconds=30, log_prints=True)
+def extract_installed_capacity(region_code) -> pd.DataFrame:
     # use the prefet Secret Block here:
     entsoe_api_key = Secret.load("entsoe-api-key").get()
     now = pd.Timestamp.today(tz="Europe/Brussels")
     e_client = EntsoePandasClient(entsoe_api_key)
-    return e_client.query_installed_generation_capacity(
-        "DE",
-        start=pd.Timestamp(year=now.year, month=1, day=1, tz="Europe/Brussels"),
-        end=now,
-    )
+    try:
+        return e_client.query_installed_generation_capacity(
+            region_code,
+            start=pd.Timestamp(year=now.year, month=1, day=1, tz="Europe/Brussels"),
+            end=now,
+        )
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == 401:
+            print("Authentication failed")
+            return pd.DataFrame()
+        else:
+            raise
 
 
 @task(retries=3, retry_delay_seconds=30)
@@ -179,22 +201,21 @@ def transform_data(
 
 
 @flow(retries=3, retry_delay_seconds=30)
-def send_newsletters(data: Dict[str, Any]) -> None:
+def send_newsletters(data: Dict[str, Any], region_code: str) -> None:
     """ example sub-flow in which the data will be sent to registered users;
-    no load step in our etl here, in fact it's an et ;)
+    no load step in our etl here, in fact it's an ets ;)
     """
     # use the prefect Email Credentials Block here:
-    email_server_credentials = EmailServerCredentials.load(
-        "my-email-credentials"
-    )
+    email_server_credentials = EmailServerCredentials.load("my-email-credentials")
     users: List[User] = get_users()
+    region = lookup_area(region_code).meaning
 
     for user in users:
-        msg = "some text here"
+        msg = f"Hello {user.name}, <br> Please find our lastest update: <br><br>"
         # this is a pre-defined prefect task:
         email_send_message.with_options(name="send-user-newsletter").submit(
             email_server_credentials=email_server_credentials,
-            subject=f"Newsletter: Intraday Generation: {data['title']}",
+            subject=f"Newsletter: Generation {data['title']} - {region}",
             msg=msg
             + data["chart"]
             + "<br><br>"
@@ -387,9 +408,13 @@ The GitHub Action has 2 jobs, first it creates the AWS infrastructure and then i
 ![success github action](./images/success_gh_action.png)
 
 The webhook and automation are now alive and wait for incoming data/ events.
-You can find the webhooks url in Prefect Cloud UI. You will now have to copy the url and create a subscribtion channel on entso-e platform. The next step is to subscribe for a specific entso-e web service (for example for the Generation Forecasts for Wind and Solar) by clicking the button directly above the desired diagram on entso-e transparency platform. The data will arrive at the webhooks endpoint as soon as entso-e sends an update message. You may want to observe this in the Events Feed:
+You can find the webhooks url in Prefect Cloud UI. You will now have to copy the url and create a subscribtion channel on entso-e platform. The next step is to subscribe for a specific entso-e web service (for example for the Generation Forecasts for Wind and Solar) by clicking the button directly above the desired diagram on entso-e transparency platform.   
+
+![entsoe subscription](./images/entso-e_subscription.png)
+
+The data will arrive at the webhooks endpoint as soon as entso-e sends an update message. You may want to observe this in the Events Feed:
   
-![prefect events](./images/Prefect_events.png)
+![prefect events](./images/webhook_events.png)
   
 After catching the data message, the webhook triggers the automation and finally, the registered user(s) will get their automated, on demand newsletter, as soon as new data from entso-e arrives:
 
