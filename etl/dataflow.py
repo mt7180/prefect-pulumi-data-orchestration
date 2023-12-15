@@ -54,36 +54,41 @@ def extract_installed_capacity(region_code: str) -> pd.DataFrame:
 
 @task(retries=3, retry_delay_seconds=30, log_prints=True)
 def transform_data(xml_str: str, installed_capacity_df: pd.DataFrame) -> Dict[str, Any]:
-    generation_forecast_df = entsoe_generation_parser(xml_str)
+    generation_df = entsoe_generation_parser(xml_str)
 
     # filter data
-    generation_forecast_df = generation_forecast_df.loc[
-        generation_forecast_df.index.minute == 0
-    ]
-    generation_type = generation_forecast_df.columns[0]
+    generation_df = generation_df.loc[generation_df.index.minute == 0]
+    # some subscriptions send aggregation and consumption data
+    if (
+        isinstance(column_name := generation_df.columns[0], tuple)
+        and "aggregated" in column_name[1].lower()
+    ):
+        generation_type = column_name[0]
+    else:
+        generation_type = column_name
 
     try:
         result_df = pd.DataFrame(
             data={
-                "forecast": generation_forecast_df[generation_type],
+                "generation": generation_df[column_name],
                 "installed": installed_capacity_df[generation_type].iloc[0],
             },
-            index=generation_forecast_df.index,
+            index=generation_df.index,
         )
 
         chart_data = []
         for index, row in result_df.iterrows():
-            percentage = int(row["forecast"] / row["installed"] * 100)
+            percentage = int(row["generation"] / row["installed"] * 100)
             chart_data.append(
                 f"{index} | {'#'*percentage}{'_'*(100-percentage)}"
-                f"  => {percentage}% ({row['forecast']}MW/{row['installed']}MW)"
+                f"  => {percentage}% ({row['generation']}MW/{row['installed']}MW)"
             )
 
     except KeyError:
-        result_df = generation_forecast_df
+        result_df = generation_df
         chart_data = [
             f"Installed capacity for {generation_type} not available.",
-            "Please find the data from your entso-e subscribtion the below:",
+            "Please find the data from your entso-e subscribtion below:",
         ]
 
     return {"chart": "<br>".join(chart_data), "df": result_df, "title": generation_type}

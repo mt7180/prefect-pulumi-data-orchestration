@@ -187,7 +187,7 @@ def transform_data(
     installed_capacity_df: pd.DataFrame
 ) -> Dict[str, Any]:
 
-    generation_forecast_df = entsoe_generation_parser(xml_str)
+    generation_df = entsoe_generation_parser(xml_str)
 
     # ... some more steps for filtering 
     # ... and transforming the data ...
