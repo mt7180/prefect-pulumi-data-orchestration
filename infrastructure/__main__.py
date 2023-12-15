@@ -40,26 +40,26 @@ ecs_cluster = aws.ecs.Cluster(cluster_name)
 # Create VPC and necessary igw, subnet, route table for push work pool
 
 vpc = aws.ec2.Vpc(
-    "newsletter_vpc",
+    "dataflow_vpc",
     cidr_block="10.0.0.0/16",
     enable_dns_support=True,
     enable_dns_hostnames=True,
 )
 
-igw = aws.ec2.InternetGateway("newsletter_internet_gateway", vpc_id=vpc.id)
+igw = aws.ec2.InternetGateway("dataflow_internet_gateway", vpc_id=vpc.id)
 
 
-route_table = aws.ec2.RouteTable("newsletter_route_table", vpc_id=vpc.id)
+route_table = aws.ec2.RouteTable("dataflow_route_table", vpc_id=vpc.id)
 
 route = aws.ec2.Route(
-    "newsletter_route",
+    "dataflow_route",
     route_table_id=route_table.id,
     destination_cidr_block="0.0.0.0/0",
     gateway_id=igw.id,
 )
 
 ecs_service_subnet = aws.ec2.Subnet(
-    "newsletter_subnet",
+    "dataflow_subnet",
     vpc_id=vpc.id,
     cidr_block="10.0.0.0/16",
     map_public_ip_on_launch=True,
@@ -69,14 +69,14 @@ ecs_service_subnet = aws.ec2.Subnet(
 
 # Associate the Route Table with the Subnet
 route_table_association = aws.ec2.RouteTableAssociation(
-    "newsletter_route_table_association",
+    "dataflow_route_table_association",
     subnet_id=ecs_service_subnet.id,
     route_table_id=route_table.id,
 )
 
 
 execution_role = aws.iam.Role(
-    "newsletter_execution_role",
+    "dataflow_execution_role",
     assume_role_policy=json.dumps(
         {
             "Version": "2012-10-17",
@@ -92,7 +92,7 @@ execution_role = aws.iam.Role(
 )
 
 execution_role_policy = aws.iam.RolePolicy(
-    "newsletter_execution_role_policy",
+    "dataflow_execution_role_policy",
     role=execution_role.name,
     policy=json.dumps(
         {
@@ -128,7 +128,7 @@ aws.iam.RolePolicyAttachment(
 
 
 task_role = aws.iam.Role(
-    "newsletter_task_role",
+    "dataflow_task_role",
     assume_role_policy=json.dumps(
         {
             "Version": "2012-10-17",
@@ -145,7 +145,7 @@ task_role = aws.iam.Role(
 
 
 task_role_policy = aws.iam.RolePolicy(
-    "newsletter_task_role_policy",
+    "dataflow_task_role_policy",
     role=task_role.name,
     policy=json.dumps(
         {
