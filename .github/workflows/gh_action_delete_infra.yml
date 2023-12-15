@@ -1,5 +1,5 @@
 
-name: Delete Flow Image in ECR Repo and AWS Infrastructure
+name: Delete Flow Image in ECR Repo and then AWS Infrastructure
 run-name: Remove Dataflow triggered by @${{ github.actor }}
 on:
   workflow_dispatch:
@@ -12,7 +12,7 @@ on:
       ecr-repo-name:
         required: true
         description: name of the ecr repo to be deleted. Note- All immages in the repo will be deleted!
-        default: 'dataflow_ecr'
+        default: ''
         type: string
 
 jobs:
@@ -67,3 +67,7 @@ jobs:
         work-dir: infrastructure
       env:
         PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+      
+    - name: Summary
+      run: |
+        echo '### AWS infrastructure successfully deleted! :rocket:' >> $GITHUB_STEP_SUMMARY

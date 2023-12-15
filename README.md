@@ -314,7 +314,7 @@ data_flow.deploy(
 )
 ```
 
-The .deploy method will build a Docker image with your flow code baked into it and push the image to the (Docker Hub or other) registry specified in the image argument. You may also use a custom Dockerfile in combination with a DeploymentImage object, as shown above. This gives you maximum flexibility to run specific flow run commands in a predefined flow execution environment.
+The .deploy method will build a Docker image with your flow code baked into it and push the image to the (Docker Hub or other) registry specified in the image argument. We will specify our ECR url here. You may also use a custom Dockerfile in combination with a DeploymentImage object, as shown above. This gives you maximum flexibility to run specific flow run commands in a predefined flow execution environment.
 >**_NOTE:_** You need to be authenticated to Prefect Cloud and your container registry when running the deployment by executing the python file (in our case with the command `python -m etl.dataflow` while venv is activated)
 
 ## Prefects new ECS Push Work Pool

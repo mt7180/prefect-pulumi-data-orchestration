@@ -137,4 +137,6 @@ jobs:
         run: python -m etl.emit_event
 
       - name: Summary
-        run: echo '### AWS infrastructure and flow successfully deployed! :rocket:' >> $GITHUB_STEP_SUMMARY
+        run: |
+          echo '### AWS infrastructure and flow successfully deployed! :rocket:' >> $GITHUB_STEP_SUMMARY
+          echo "#### use the following ECR repo name as input to the delete_infra github action: ${{ steps.pulumi.outputs.ecr_repo_name }}" >> $GITHUB_STEP_SUMMARY

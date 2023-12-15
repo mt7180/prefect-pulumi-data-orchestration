@@ -171,7 +171,7 @@ if __name__ == "__main__":
                 "cluster": os.getenv("ECS_CLUSTER"),
                 "vpc_id": os.getenv("VPC_ID", ""),
                 "container_name": os.getenv("ECR_REPO_NAME", ""),
-                "family": "prefect-flow",  # newsletter
+                "family": "prefect-flow",
                 "aws_credentials": {
                     "$ref": {
                         "block_document_id": os.getenv("AWS_CREDENTIAL_BLOCK_ID", "")
@@ -196,7 +196,7 @@ if __name__ == "__main__":
             #    aws ecr get-login-password --region region | docker login --username AWS --password-stdin aws_account_id.dkr.ecr.region.amazonaws.com
 
         data_flow.deploy(
-            "deploy_dataflow_air-to-air_push-infra-loc",
+            "deploy_dataflow_air-to-air_push",
             work_pool_name=work_pool_name,
             job_variables=job_variables,
             image=DeploymentImage(
