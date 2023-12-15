@@ -60,7 +60,7 @@ Prefect also supports event-driven workflows as a first-class concept, making it
 [Pulumi] lets you define "Infrastructure as Code" (IaC), which is a concept of building and managing your custom cloud infrastructure by code.
 This makes it easy to edit, distribute and version control your configurations. And moreover, you can automate the process of creating, but also updating and deleting the infrastructure with one command, which makes it very powerful in combination with CI/CD. 
 
-Pulumi supports a wide range of programming languages for the infrastructure definition, allowing you to choose your favorite one. Guess, which we will use :wink:
+In contrast to Terraform, Pulumi supports a wide range of programming languages for the infrastructure definition, allowing you to choose your favorite one. Guess, which we will use :wink:
 
 ### Why AWS ECS?
 [AWS] Elastic Container Service (ECS) is a fully managed container orchestration service by Amazon and provides a powerful and scalable solution for deploying and managing containerized applications without having to manage the underlying infrastructure. 
@@ -397,18 +397,19 @@ The visualization covers all steps of the flow run submission process.
 We initially deploy the flow from our local computer to Prefect Cloud (or via Github action which is not shown here). The Prefect API will then submit the deployment to the specified work pool and pushes the Docker container image of the flow to AWS ECR. In the same time a Prefect Automation will be created, since we assigned a DeploymentTrigger to the trigger parameter of our deployment. 
 The automation will wait for any Prefect event emitted by the webhook (or any other Prefect event with the same resource id, which we will finally see as last step of the initializing GitHub Action). So, when the entso-e message with a data update hits our webhook, a flow run is triggered immediately by the automation (with the entso-e data passed in) and the work pool will submit the flow run to the serverless AWS infrastructure, which we specified in the job_variables. Therefore, Prefect provides the AWS ECS API with metadata which include the full task definition parameter set, which is used in turn to generate an ECS task. The task is provided with the flow Docker image url and is specified to run our flow from the image.  
 
-## The GitHub Actions
-Finally, we will use Github Actions to automatically set-up the whole AWS infrastructure, create a Prefect work pool and a webhook, and deploy the flow to it with a Deployment trigger assigned. As last step, the GitHub Action will fire a test event to the automation, so that we can see everything in action. You will need to pass in your preferred AWS region and the aws_credential_block_id. You can get the id by executing `prefect blocks ls` in your terminal after you created the AWS Credentials Block in the Prefect Cloud UI.
+## GitHub Actions
+Finally, we will now use Github Actions to automatically set-up the whole AWS infrastructure, create a Prefect work pool and a webhook, and deploy the flow to it with a Deployment trigger assigned. As last step, the GitHub Action will fire a test event to the automation, so that we can see everything in action. You will need to pass in your preferred AWS region and the aws_credential_block_id. You can get the id by executing `prefect blocks ls` in your terminal after you created the AWS Credentials Block in the Prefect Cloud UI.
 
 So in fact, once everything is configured (prerequisites!), you can set up the deployment of the whole infrastructure and the flow all at once, with only one click on GitHub (gh_action_init_dataflows.yml): 
 
 ![run github action](./images/run_gh_action.png)
+
 The GitHub Action has 2 jobs, first it creates the AWS infrastructure and then it deploys the flow to Prefect API, utilizing the received infrastructure identifying names from the previous step. If you are interested, you can inspect every step and output on GitHub.
 
 ![success github action](./images/success_gh_action.png)
 
 The webhook and automation are now alive and wait for incoming data/ events.
-You can find the webhooks url in Prefect Cloud UI. You will now have to copy the url and create a subscribtion channel on entso-e platform. The next step is to subscribe for a specific entso-e web service (for example for the Generation Forecasts for Wind and Solar) by clicking the button directly above the desired diagram on entso-e transparency platform.   
+You can find the webhooks url in Prefect Cloud UI. You need to copy the url and create a subscribtion channel on entso-e platform. The next step is to subscribe for a specific entso-e web service (for example for the Generation Forecasts for Wind and Solar) by clicking the button directly above the desired diagram on entso-e transparency platform.   
 
 ![entsoe subscription](./images/entso-e_subscription.png)
 
@@ -427,6 +428,8 @@ Now, that we have reached the end of the tutorial, you may want to delete the wh
 TODO: write a small conclusion
 
 
+In this tutorial, we have explored how to effectively combine different frameworks to successfully build an event-driven serverless datapipeline that we can use to automatically receive the updates of the Entso-e Web Service, transform the data and then send a newsletter to registered users. 
+We have accomplished that the AWS infrastructure and the Prefect flow can be deployed seamlessly and automatically without giving away control over AWS policies and cluster settings. In addition, by using a prefect ECS push workpool, we have found a cost-efficient solution in which a task is only executed on the ecs cluster when data actually needs to be processed.
 
 
 [Prefect Cloud]:                        https://www.prefect.io
