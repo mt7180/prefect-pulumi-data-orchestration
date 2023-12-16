@@ -115,8 +115,8 @@ def data_flow(event_message: str) -> None:
 When you feed in an `event_message`, the message payload will get extracted.
 Then, some more data is gathered and transformed to finally be used for a newsletter, which will be sent to each registered user.   
 
-The functions used in this workflow are also decorated and are in fact prefect tasks and a sub-flow.
-This allow us to define retry functionality, for example for the case, that the API call or email send task does not work on the first attempt.
+You will notice that the functions used in this workflow are also decorated and are in fact prefect tasks and a sub-flow.  
+This allows us to define retry functionality, for example for the case, that the API call or email send task does not work on the first attempt.
 
 See the above flow with the related tasks and a second flow below:
 
@@ -419,7 +419,7 @@ The data will arrive at the webhooks endpoint as soon as entso-e sends an update
   
 After catching the data message, the webhook triggers the automation and finally, the registered user(s) will get their automated, on demand newsletter, as soon as new data from entso-e arrives:
 
-![](./images/automation_triggered.png)
+![automation triggered](./images/automation_triggered.png)
        
 >Now, that we have reached the end of the tutorial, you may want to delete the whole AWS infrastructure, that we have just created. All you have to do is to run the next GitHub Action (gh_action_delete_infra.yml) and provide again (the same!) AWS region and ecr repo name. You will find the ecr repo name in the AWS management console or you can just refer to the initializing GitHub Action output.
 
