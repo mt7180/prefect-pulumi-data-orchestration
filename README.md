@@ -331,7 +331,8 @@ When you create the ECS push work pool (you can do this directly in the Prefect 
 >**_ADVANCED:_** If you are already familiar with the [AWS Task Definition], you might have noticed, that not all parameters of the Task Definition Template are available in the base job template of the Prefect ECS (push) work pool. It is very easy to [adjust the job template], if you need to set a specific task definition parameter, the linked video shows how to do this in the Prefect Cloud UI. In short: put the desired parameter to the underlaying work pool json definition (advanced tab of the work pool configuration), to ingest the needed parameters AND assign it also to the desired task definition parameter down at the bottom in the job configuration section (in jinja notation!).  
 By the way: the following command will give you the base job template for the ecs:push work pool in the terminal: `prefect work-pool get-default-base-job-template --type ecs:push`
 
- 
+
+...TODO: update due to release of [Prefect 2.14.11](https://docs.prefect.io/latest/guides/deployment/push-work-pools/)
 Recently, also a new optional ecs push work pool parameter  [--provision-infra] was released:
 ```bash
 prefect work-pool create --type ecs:push my_push_work-pool --provision-infra
@@ -421,13 +422,14 @@ After catching the data message, the webhook triggers the automation and finally
 
 ![automation triggered](./images/automation_triggered.png)
        
->Now, that we have reached the end of the tutorial, you may want to delete the whole AWS infrastructure, that we have just created. All you have to do is to run the next GitHub Action (gh_action_delete_infra.yml) and provide again (the same!) AWS region and ecr repo name. You will find the ecr repo name in the AWS management console or you can just refer to the initializing GitHub Action output.
+>Now, that we have reached the end of this tutorial, you may want to delete the AWS infrastructure we just created. All you have to do is to run the next GitHub Action (gh_action_delete_infra.yml) and provide again (the same!) AWS region and ecr repo name. You will find the ecr repo name in the AWS management console or you can just refer to the initializing GitHub Action output.
+you may want to delete the entire AWS infrastructure we just created.
 
 ## Conclusion
-In this tutorial, we have explored how to effectively combine the frameworks Prefect and Pulumi (among some others) to successfully build an event-driven serverless datapipeline that automatically receives the updates from the Entso-e Web Service, transforms the data and then sends a newsletter to registered users. 
-We have accomplished that the AWS infrastructure and the Prefect flow can be deployed all in one step seamlessly and automatically without giving away control over AWS policies and cluster settings. In addition, by using a prefect ECS push workpool, we have found a cost-efficient solution in which a task is only executed on the ECS cluster when data actually needs to be processed.
+We have explored how to effectively combine the frameworks Prefect and Pulumi (among some others) to successfully build an event-driven serverless datapipeline that automatically receives the updates from the Entso-e Web Service, transforms the data and then sends a newsletter to registered users. 
+We have accomplished that the AWS infrastructure and the Prefect flow can be deployed all in one step seamlessly and automated without giving away control over AWS policies and cluster settings. In addition, by using a prefect ECS push workpool, we have found a cost-efficient solution in which a task is only executed on the ECS cluster when data actually needs to be processed.
 
-If you have any questions about this setup or something is unclear, please do not hesitate to contact me.
+If you have any questions regarding this setup or anything is unclear, please do not hesitate to contact me.
 
 
 [Prefect Cloud]:                        https://www.prefect.io
