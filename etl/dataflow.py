@@ -21,7 +21,7 @@ def extract_event_payload(event_msg: str) -> str:
 
 
 @task
-def extract_payload_region(payload_str: str) -> str:
+def extract_region_code(payload_str: str) -> str:
     pattern = r">([^<]+)</inBiddingZone_Domain\.mRID>"
     match = re.search(pattern, payload_str)
     region_code = ""
@@ -95,14 +95,14 @@ def transform_data(xml_str: str, installed_capacity_df: pd.DataFrame) -> Dict[st
 
 
 @flow(retries=3, retry_delay_seconds=30)
-def send_newsletters(data: Dict[str, Any], region_code: str) -> None:
+def send_newsletters(data: Dict[str, Any], region: str) -> None:
     """in this example the data won't be loaded into a database,
     but will be sent to registered users
     """
     # use the prefect Email Credentials Block here:
     email_server_credentials = EmailServerCredentials.load("my-email-credentials")
     users: List[User] = get_users()
-    region = lookup_area(region_code).meaning
+    ## region = lookup_area(region_code).meaning
 
     for user in users:
         line1 = f"Hello {user.name}, <br>"
@@ -122,13 +122,14 @@ def send_newsletters(data: Dict[str, Any], region_code: str) -> None:
         )
 
 
-@flow
+@flow(log_prints=True)
 def data_flow(event_msg: str) -> None:
     event_payload = extract_event_payload(event_msg)
-    region_code = extract_payload_region(event_payload)
+    region_code = extract_region_code(event_msg)
+    region = lookup_area(region_code).meaning
     installed_capacity = extract_installed_capacity(region_code)
     data = transform_data(event_payload, installed_capacity)
-    send_newsletters(data, region_code)
+    send_newsletters(data, region)
 
 
 if __name__ == "__main__":
@@ -142,7 +143,7 @@ if __name__ == "__main__":
     )
 
     ### Set your preferred flow run/ deployment mode here:
-    deploy_mode = DeployModes.ECS_PUSH_WORK_POOL
+    deploy_mode = DeployModes.LOCAL_TEST
 
     if deploy_mode == DeployModes.LOCAL_TEST:
         # test flow with mocked event data
