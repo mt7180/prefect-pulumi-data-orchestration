@@ -285,7 +285,7 @@ If you have previously installed and configured the AWS CLI, Pulumi will [respec
 - after you have created an IAM user, click on the user name and open the security credentials tab, create an access key for programmatical access (aws_secret_access_key)
 - install aws cli (on mac: brew install awscli)
 - run command "aws configure" in the terminal, you will be prompted for AWS Access Key ID and AWS Secret Access Key => a credentials file is created in user dir: ~/.aws/credentials
-#### b) Create an AWS IAM Role to manage the required project-specific policies; the role will be assumed when the infrastructure is created:
+#### b) Create an AWS IAM Role to manage the required project-specific policies; the role will be assumed for the specific infrastructure creation (AWS_IAM_ROLE_TO_ASSUME):
 - create an IAM Role in the AWS Management Console (Security Credentials/ Access Management on the left / Role => Create / Custom trust policy and put in the following custom trust policy - don't forget to add your own IAM User arn under Principal/ AWS :
 ```
     {
@@ -315,7 +315,7 @@ If you have previously installed and configured the AWS CLI, Pulumi will [respec
 ### GitHub
 *necessary, as we will use GitHub Actions to deploy our AWS infrastructure with one click*
 - Create a new GitHub repo
-- Add the following secrets to your GitHub repo actions secrets: AWS_ACCESS_KEY, AWS_SECRET_ACCESS_KEY, PULUMI_ACCESS_TOKEN, PREFECT_API_KEY, PREFECT_WORKSPACE, you can mainly follow the guide in this [article].
+- Add the following secrets to your GitHub repo actions secrets: AWS_ACCESS_KEY, AWS_SECRET_ACCESS_KEY, PULUMI_ACCESS_TOKEN, PREFECT_API_KEY, PREFECT_WORKSPACE, AWS_IAM_ROLE_TO_ASSUME you can mainly follow the guide in this [article].
 ### Pulumi
 - Make sure you have executed each step in the [AWS prerequisites](#aws)
 - Create a [Pulumi account](https://www.pulumi.com)

@@ -62,6 +62,7 @@ jobs:
           work-dir: ./infrastructure
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}  
+          AWS_IAM_ROLE_TO_ASSUME: ${{  secrets.AWS_IAM_ROLE_TO_ASSUME }}
 
       - name: Create AWS Infrastructure Summary
         run: |
