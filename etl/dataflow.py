@@ -102,7 +102,6 @@ def send_newsletters(data: Dict[str, Any], region: str) -> None:
     # use the prefect Email Credentials Block here:
     email_server_credentials = EmailServerCredentials.load("my-email-credentials")
     users: List[User] = get_users()
-    ## region = lookup_area(region_code).meaning
 
     for user in users:
         line1 = f"Hello {user.name}, <br>"
@@ -122,7 +121,7 @@ def send_newsletters(data: Dict[str, Any], region: str) -> None:
         )
 
 
-@flow(log_prints=True)
+@flow
 def data_flow(event_msg: str) -> None:
     event_payload = extract_event_payload(event_msg)
     region_code = extract_region_code(event_msg)
@@ -143,7 +142,7 @@ if __name__ == "__main__":
     )
 
     ### Set your preferred flow run/ deployment mode here:
-    deploy_mode = DeployModes.LOCAL_TEST
+    deploy_mode = DeployModes.ECS_PUSH_WORK_POOL
 
     if deploy_mode == DeployModes.LOCAL_TEST:
         # test flow with mocked event data
