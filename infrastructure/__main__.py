@@ -213,7 +213,14 @@ task_role_policy = aws.iam.RolePolicy(
 policy_document = aws.iam.get_policy_document(
     statements=[
         {
-            "actions": ["ecs:RegisterTaskDefinition", "ecs:RunTask", "iam:PassRole"],
+            "actions": [
+                "ecs:RegisterTaskDefinition",
+                "ecs:RunTask",
+                "iam:PassRole",
+                "ecr:GetAuthorizationToken",
+                "ecr:BatchGetImage",
+                "ecr:GetDownloadUrlForLayer",
+            ],
             "resources": ["*"],
             "effect": "Allow",
         }
@@ -230,7 +237,7 @@ iam_policy = aws.iam.Policy(
 
 # Attach the policy to your IAM user
 user_policy_attachment = aws.iam.UserPolicyAttachment(
-    "myUserPolicyAttachment",
+    "prefect-policy-attachment",
     user=os.getenv("AWS_IAM_USER_NAME"),
     policy_arn=iam_policy.arn,
     opts=pulumi.ResourceOptions(provider=assumed_role_provider),
