@@ -28,35 +28,12 @@ ecr_repo = aws.ecr.Repository(
     opts=pulumi.ResourceOptions(provider=assumed_role_provider),
 )
 
-# ecr_lifecycle_policy = aws.ecr.LifecyclePolicy(
-#     "ecr_lifecycle_policy",
-#     repository=ecr_repo.name,
-#     policy=json.dumps(
-#         {
-#             "rules": [
-#                 {
-#                     "rulePriority": 1,
-#                     "description": "Keep only one untagged image, expire all others",
-#                     "selection": {
-#                         "tagStatus": "untagged",
-#                         "countType": "imageCountMoreThan",
-#                         "countNumber": 1,
-#                     },
-#                     "action": {"type": "expire"},
-#                 }
-#             ]
-#         }
-#     ),
-#  #   opts=pulumi.ResourceOptions(provider=assumed_role_provider),
-# )
-
 
 # Create an ECS Cluster
 ecs_cluster = aws.ecs.Cluster(
     cluster_name,
     opts=pulumi.ResourceOptions(provider=assumed_role_provider),
 )
-
 
 # Create VPC and necessary igw, subnet, route table for push work pool
 
@@ -141,13 +118,6 @@ execution_role_policy = aws.iam.RolePolicy(
                     "Effect": "Allow",
                     "Resource": "arn:aws:logs:*:*:*",
                 }
-                # {
-                #     "Effect": "Allow",
-                #     "Action": [
-                #         "ssm:GetParameters",
-                #     ],
-                #     "Resource": "*",
-                # },
             ],
         }
     ),
@@ -245,6 +215,7 @@ iam_policy = aws.iam.Policy(
                             "ecr:InitiateLayerUpload",
                             "ecr:PutImage",
                             "ecr:UploadLayerPart",
+                            "ecr:ListImages",
                         ],
                         "Effect": "Allow",
                         "Resource": ecr_arn,
