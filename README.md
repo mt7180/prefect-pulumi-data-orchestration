@@ -95,6 +95,7 @@ Find the full code example in following [GitHub repo], the folder structure look
    |- __main__.py                               # pulumi main program
    |- Pulumi.dev.yaml
    |- Pulumi.yaml
+   |- .env                                      # don't push to github
    └- requirements.txt                          # requirements for pulumi program
 </code></pre>
 
@@ -169,7 +170,7 @@ def extract_installed_capacity(region_code: str) -> pd.DataFrame:
     entsoe_api_key = Secret.load("entsoe-api-key").get()
     now = pd.Timestamp.today(tz="Europe/Brussels")
     e_client = EntsoePandasClient(entsoe_api_key)
-    
+
     try:
         return e_client.query_installed_generation_capacity(
             region_code,
