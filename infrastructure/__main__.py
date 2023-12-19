@@ -231,7 +231,7 @@ policy_document = aws.iam.get_policy_document(
 iam_policy = aws.iam.Policy(
     "prefect_ecs_push_policies",
     policy=policy_document.json,
-    description="Policy that are needed by IAM user to make the Prefet ecs:push work pool run",
+    description="Policies that are needed by IAM user to make the Prefet ecs:push work pool run",
     opts=pulumi.ResourceOptions(provider=assumed_role_provider),
 )
 
