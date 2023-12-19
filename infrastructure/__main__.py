@@ -246,7 +246,7 @@ iam_policy = aws.iam.Policy(
                         "ecr:UploadLayerPart",
                     ],
                     "Effect": "Allow",
-                    "Resource": ecr_repo.arn,
+                    "Resource": str(ecr_repo.arn),
                 },
             ],
         }
