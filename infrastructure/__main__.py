@@ -209,6 +209,15 @@ task_role_policy = aws.iam.RolePolicy(
 )
 
 # Following policies will be needed by your IAM User to make the Prefet ecs:push work pool run:
+# - "ecs:RegisterTaskDefinition",
+# - "ecs:RunTask",
+# - "iam:PassRole",
+# the remaining policies are needed by the github actions to execute ecr authentication:
+# see also https://github.com/aws-actions/amazon-ecr-login/tree/v1/#ecr-public
+# - "ecr:GetAuthorizationToken",
+# - "ecr:BatchGetImage",
+# - "ecr:GetDownloadUrlForLayer",
+# All Policies, which are added here to your IAM user will be deleted again when "pulumi destroy" is executed
 
 iam_policy = aws.iam.Policy(
     "prefect_ecs_push_policies",
@@ -222,11 +231,22 @@ iam_policy = aws.iam.Policy(
                         "ecs:RunTask",
                         "iam:PassRole",
                         "ecr:GetAuthorizationToken",
-                        "ecr:BatchGetImage",
-                        "ecr:GetDownloadUrlForLayer",
                     ],
                     "Effect": "Allow",
                     "Resource": "*",
+                },
+                {
+                    "Action": [
+                        "ecr:BatchGetImage",
+                        "ecr:BatchCheckLayerAvailability",
+                        "ecr:CompleteLayerUpload",
+                        "ecr:GetDownloadUrlForLayer",
+                        "ecr:InitiateLayerUpload",
+                        "ecr:PutImage",
+                        "ecr:UploadLayerPart",
+                    ],
+                    "Effect": "Allow",
+                    "Resource": ecr_repo.arn,
                 },
             ],
         }
@@ -234,6 +254,7 @@ iam_policy = aws.iam.Policy(
     description="Policies that are needed by IAM user to make the Prefet ecs:push work pool run",
     opts=pulumi.ResourceOptions(provider=assumed_role_provider),
 )
+
 
 # Attach the policy to your IAM user
 user_policy_attachment = aws.iam.UserPolicyAttachment(
