@@ -210,27 +210,27 @@ task_role_policy = aws.iam.RolePolicy(
 
 # Following policies will be needed by your IAM User to make the Prefet ecs:push work pool run:
 
-policy_document = aws.iam.get_policy_document(
-    statements=[
-        {
-            "actions": [
-                "ecs:RegisterTaskDefinition",
-                "ecs:RunTask",
-                "iam:PassRole",
-                "ecr:GetAuthorizationToken",
-                "ecr:BatchGetImage",
-                "ecr:GetDownloadUrlForLayer",
-            ],
-            "resources": ["*"],
-            "effect": "Allow",
-        }
-    ],
-    opts=pulumi.ResourceOptions(provider=assumed_role_provider),
-)
-
 iam_policy = aws.iam.Policy(
     "prefect_ecs_push_policies",
-    policy=policy_document.json,
+    policy=json.dumps(
+        {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Action": [
+                        "ecs:RegisterTaskDefinition",
+                        "ecs:RunTask",
+                        "iam:PassRole",
+                        "ecr:GetAuthorizationToken",
+                        "ecr:BatchGetImage",
+                        "ecr:GetDownloadUrlForLayer",
+                    ],
+                    "Effect": "Allow",
+                    "Resource": "*",
+                },
+            ],
+        }
+    ),
     description="Policies that are needed by IAM user to make the Prefet ecs:push work pool run",
     opts=pulumi.ResourceOptions(provider=assumed_role_provider),
 )
