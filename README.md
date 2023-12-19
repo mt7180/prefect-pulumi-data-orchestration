@@ -284,12 +284,13 @@ We will opt for the second approach and deploy() our flow to run serverless, whi
 #### a) Create an AWS IAM user with programmatic access and credentials file on your local machine to be generally able to deploy and update resources through Pulumi 
 If you have previously installed and configured the AWS CLI, Pulumi will [respect and use your configuration settings.](https://www.pulumi.com/docs/clouds/aws/get-started/begin/)
 - Sign up for AWS (you will be prompted for your Credit Card Number, but you get a free first year for trial usage which has some [AWS service restrictions])
-- Create an IAM User in the AWS Management Console (Security Credentials/ Access Management on the left / Users => aws_access_key_id)
-- after you have created an IAM user, click on the username and open the security credentials tab, create an access key for programmatical access (aws_secret_access_key)
-- install aws cli (on mac: brew install awscli)
-- run command "aws configure" in the terminal, you will be prompted for AWS Access Key ID and AWS Secret Access Key => a credentials file is created in user dir: ~/.aws/credentials (on a mac)
+- Create an `IAM User` in the AWS Management Console (Security Credentials/ Access Management on the left / Users => aws_access_key_id)
+- after you have created an IAM user, click on the username and open the security credentials tab, create an `access key` for programmatical access (aws_secret_access_key)
+- install `aws cli` (on mac: brew install awscli)
+- run command `aws configure` in the terminal, you will be prompted for AWS Access Key ID and AWS Secret Access Key => a credentials file is created in user dir: ~/.aws/credentials (on a mac)
+- Add the `IAMFullAccess` Policy to your newly created IAM user (Add permissions => Attach Policies Directly / Search for IAMFullAccess) to grant Pulumi the right to attach further policies to your IAM user, which are needed to make the Prefect ecs:push work pool work
 #### b) Create an AWS IAM Role to manage the required project-specific policies; the role is assumed in the Pulumi program when the specific infrastructure is created (AWS_IAM_ROLE_TO_ASSUME):
-- create an IAM Role in the AWS Management Console (Security Credentials/ Access Management on the left / Role => Create / Custom trust policy and put in the following custom trust policy - don't forget to add your own IAM User arn under Principal/ AWS:
+- create an `IAM Role` in the AWS Management Console (Security Credentials/ Access Management on the left / Role => Create / Custom trust policy and put in the following custom trust policy - don't forget to add your own IAM User arn under Principal/ AWS:
 ```
     {
         "Version": "2012-10-17",
