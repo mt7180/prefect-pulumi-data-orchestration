@@ -199,6 +199,8 @@ iam_policy = aws.iam.Policy(
                     {
                         "Action": [
                             "ecs:RegisterTaskDefinition",
+                            "ec2:DescribeVpcs",
+                            "ec2:DescribeSubnets",
                             "ecs:RunTask",
                             "iam:PassRole",
                             "ecr:GetAuthorizationToken",
@@ -216,6 +218,7 @@ iam_policy = aws.iam.Policy(
                             "ecr:PutImage",
                             "ecr:UploadLayerPart",
                             "ecr:ListImages",
+                            "ecr:BatchDeleteImage",
                         ],
                         "Effect": "Allow",
                         "Resource": ecr_arn,
