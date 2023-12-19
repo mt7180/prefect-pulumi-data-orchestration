@@ -221,35 +221,37 @@ task_role_policy = aws.iam.RolePolicy(
 
 iam_policy = aws.iam.Policy(
     "prefect_ecs_push_policies",
-    policy=json.dumps(
-        {
-            "Version": "2012-10-17",
-            "Statement": [
-                {
-                    "Action": [
-                        "ecs:RegisterTaskDefinition",
-                        "ecs:RunTask",
-                        "iam:PassRole",
-                        "ecr:GetAuthorizationToken",
-                    ],
-                    "Effect": "Allow",
-                    "Resource": "*",
-                },
-                {
-                    "Action": [
-                        "ecr:BatchGetImage",
-                        "ecr:BatchCheckLayerAvailability",
-                        "ecr:CompleteLayerUpload",
-                        "ecr:GetDownloadUrlForLayer",
-                        "ecr:InitiateLayerUpload",
-                        "ecr:PutImage",
-                        "ecr:UploadLayerPart",
-                    ],
-                    "Effect": "Allow",
-                    "Resource": str(ecr_repo.arn),
-                },
-            ],
-        }
+    policy=ecr_repo.arn.apply(
+        lambda ecr_arn: json.dumps(
+            {
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Action": [
+                            "ecs:RegisterTaskDefinition",
+                            "ecs:RunTask",
+                            "iam:PassRole",
+                            "ecr:GetAuthorizationToken",
+                        ],
+                        "Effect": "Allow",
+                        "Resource": "*",
+                    },
+                    {
+                        "Action": [
+                            "ecr:BatchGetImage",
+                            "ecr:BatchCheckLayerAvailability",
+                            "ecr:CompleteLayerUpload",
+                            "ecr:GetDownloadUrlForLayer",
+                            "ecr:InitiateLayerUpload",
+                            "ecr:PutImage",
+                            "ecr:UploadLayerPart",
+                        ],
+                        "Effect": "Allow",
+                        "Resource": ecr_arn,
+                    },
+                ],
+            }
+        )
     ),
     description="Policies that are needed by IAM user to make the Prefet ecs:push work pool run",
     opts=pulumi.ResourceOptions(provider=assumed_role_provider),
