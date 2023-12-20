@@ -319,7 +319,7 @@ If you have previously installed and configured the AWS CLI, Pulumi will [respec
 ### GitHub
 *necessary, as we will use GitHub Actions to deploy our AWS infrastructure with one click*
 - Create a new GitHub repo
-- Add the following secrets to your GitHub repo actions secrets: AWS_ACCESS_KEY, AWS_SECRET_ACCESS_KEY, PULUMI_ACCESS_TOKEN, PREFECT_API_KEY, PREFECT_WORKSPACE, AWS_IAM_ROLE_TO_ASSUME (arn of the role). You can mainly follow the guide in this [article].
+- Add the following secrets to your GitHub repo actions secrets: AWS_ACCESS_KEY, AWS_SECRET_ACCESS_KEY, PULUMI_ACCESS_TOKEN, PREFECT_API_KEY, PREFECT_WORKSPACE, AWS_IAM_USER_NAME, AWS_IAM_ROLE_TO_ASSUME (arn of the role). You can mainly follow the guide in this [article].
 
 ### Pulumi
 - Make sure you have executed each step in the [AWS prerequisites](#aws)
