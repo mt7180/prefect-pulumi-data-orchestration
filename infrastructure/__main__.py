@@ -11,6 +11,15 @@ project_name = "dataflow"
 aws_accout_id = aws.get_caller_identity().account_id
 aws_region = aws.get_region()
 
+# note: for the infrastructure creation pulumi will assume an AWS IAM role,
+# which  you have to create in advance (see readme of the repo).
+# You will need to provide the arn of the role to the pulumi program as
+# 'AWS_IAM_ROLE_TO_ASSUME' environment variable by:
+# a) adding it to the .env file in your infrastructure folder, if you want to
+# run the 'pulumi up' command locally on your computer
+# b) adding it in your Github Action to the environment variables section of the step
+# (this is alread prepared for this project) and add the
+# arn of the role to your GitHub repos' Secrets (secret name: AWS_IAM_ROLE_TO_ASSUME)
 
 # Setup the AWS provider to assume a specific role
 assumed_role_provider = aws.Provider(
@@ -178,16 +187,19 @@ task_role_policy = aws.iam.RolePolicy(
     opts=pulumi.ResourceOptions(provider=assumed_role_provider),
 )
 
-# Following policies will be needed by your IAM User to make the Prefet ecs:push work pool run:
+# note: you need to provide also the AWS IAM username as environment variable
+# (same procedure as for the IAM role) which is used for the execution of
+# the prefect flow (for which you provided the aws credentials to prefect)
+
+# Following policies will be attached to your IAM User to make the Prefet ecs:push work pool run:
 # - "ecs:RegisterTaskDefinition",
 # - "ecs:RunTask",
+# - "ec2:DescribeVpcs",
+# - "ec2:DescribeSubnets",
 # - "iam:PassRole",
-# the remaining policies are needed by the github actions to execute ecr authentication:
+# the remaining policies are needed for the GitHub Actions to execute ecr authentication (private ecr repo):
 # see also https://github.com/aws-actions/amazon-ecr-login/tree/v1/#ecr-public
-# - "ecr:GetAuthorizationToken",
-# - "ecr:BatchGetImage",
-# - "ecr:GetDownloadUrlForLayer",
-# All Policies, which are added here to your IAM user will be deleted again when "pulumi destroy" is executed
+# All Policies, which are added here to your IAM User will be deleted again when "pulumi destroy" is executed
 
 iam_policy = aws.iam.Policy(
     "prefect_ecs_push_policies",
@@ -227,7 +239,7 @@ iam_policy = aws.iam.Policy(
             }
         )
     ),
-    description="Policies that are needed by IAM user to make the Prefet ecs:push work pool run",
+    description="Policies for Prefect ecs:push work pool and Github Action ecr authentication",
     opts=pulumi.ResourceOptions(provider=assumed_role_provider),
 )
 

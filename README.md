@@ -314,7 +314,7 @@ If you have previously installed and configured the AWS CLI, Pulumi will [respec
     - AmazonECS_FullAccess
     - AmazonElasticContainerRegistryPublicFullAccess
     - IAMFullAccess   
-- you may want to further customize/ restrict the attached policies (assign the individual underlying policies instead of granting full access, but don't forget the necessary policies to destroy the resources afterwards)
+- you may want to further customize/ restrict the attached policies (assign the individual underlying policies instead of granting full access, but don't forget the necessary policies to destroy the resources afterwards!)
 
 ### GitHub
 *necessary, as we will use GitHub Actions to deploy our AWS infrastructure with one click*
