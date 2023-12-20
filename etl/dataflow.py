@@ -192,7 +192,7 @@ if __name__ == "__main__":
             ]
             name = os.getenv("ECR_REPO_URL", "")
             push = True
-            work_pool_name = "air-to-air_push"
+            work_pool_name = "air-2-air_push"
             # note the following deployment procedure (same as in gh action):
             # 1: go into infrastructure folder and execute command: pulumi up
             # 2: put pulumi output to .env file
@@ -201,7 +201,7 @@ if __name__ == "__main__":
             #    aws ecr get-login-password --region region | docker login --username AWS --password-stdin aws_account_id.dkr.ecr.region.amazonaws.com
 
         data_flow.deploy(
-            "deploy_dataflow_air-to-air_push",
+            "deploy_dataflow_air-2-air_push",
             work_pool_name=work_pool_name,
             job_variables=job_variables,
             image=DeploymentImage(
