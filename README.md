@@ -1,7 +1,7 @@
 # Orchestrating Event-Driven Serverless Data Pipelines with Prefect + Pulumi + AWS
 ## Content
-This is an example project showcasing how to use the latest features of Prefect such as AWS ECS Push Work Pool, Webhook & Automation.
-The goal is to automatically detect and process incoming data from ENTSO-E Transparency Platform and orchestrate the dataflow serverless with Python. A combination of Prefect, Pulumi, GitHub Actions and AWS services is used.
+This is an example project showcasing how to use the latest features of Prefect such as AWS ECS Push Work Pool, Webhooks & Automations.
+The goal is to automatically detect and process incoming data from ENTSO-E Transparency Platform and orchestrate the dataflow serverlessly with Python. A combination of Prefect, Pulumi, GitHub Actions and AWS services is used.
 
 <center>
  <figure>
@@ -31,9 +31,9 @@ The goal is to automatically detect and process incoming data from ENTSO-E Trans
 ## Motivation
 >Serverless, event-driven data pipelines are a natural fit for modern data engineering, as they provide a scalable, cost-effective, and flexible way to process large volumes of data on demand.
 
-In general, data pipelines provide a systematic and automated approach to collecting, transforming, and structuring large amounts of data from multiple sources. The ultimate goal is to make them available e.g. for data analysis, data visualization, or machine learning tasks.
+In general, data pipelines provide a systematic and automated approach to collecting, transforming, and structuring large amounts of data from multiple sources. The ultimate goal is to make them available downstream, in places such as data analysis, data visualization, or machine learning tasks.
 
-To make this process serverless, frees data engineers and scientists from the burden of infrastructure management and allows them to focus on building and implementing data workflows without worrying about provisioning and scaling servers. But the downside is, that users must pay for the services and computing resources.
+To make this process serverless frees data engineers and scientists from the burden of infrastructure management and allows them to focus on building and implementing data workflows without worrying about provisioning and scaling servers. However, the downside is that users must pay for the services and computing resources.
 
 In this context, event-driven processing not only enables responsiveness to real-time events in the data environment and dynamic execution of tasks. It also enables cost-efficient data processing, as computing resources scale automatically and are allocated dynamically and on demand. Users only pay for the computing resources that are actually used during data processing.
 
@@ -49,7 +49,7 @@ Else:
 ### Why Prefect?
 Prefect is a workflow orchestration platform and offers a very simple way of transforming any Python function into a unit of work that can be observed and orchestrated. With a few decorators, it adds functionalities like automatic retries, distributed execution and scheduling to your code and transforms it into resilient, dynamic workflows which are reactive and recover from unexpected changes. 
 
-A big advantage is also that it allows for very easy scaling from simple local testing in Python to productional use on (serverless) infrastructure of your choice, without changes.
+A big advantage is also that it allows for very easy scaling from simple local testing in Python to production use on (serverless) infrastructure of your choice, without changes.
 You can build [scheduled] or [event-driven data pipelines], run them on your local machine or [serverless on GitHub] or more advanced on an AWS ECS Cluster, and stream even (near) [real-time], which makes it very versatile. 
 With [Prefect Cloud] it also gives you a nice UI for visualizing your flow runs and configuring your Prefect components such as Work Pools, Blocks, Webhooks and Automations.
 
@@ -256,9 +256,9 @@ After running the command `python -m etl.dataflow` in your terminal, the flow is
 
 ![flow_chart](./images/flow_chart.png)
 
-Great, but at a certain point we want to close our laptop, and everything should work remotely and reactive (scheduled, event-driven). We have to deploy our flow and we have [two options](https://docs.prefect.io/latest/concepts/deployments/#two-approaches-to-deployments) for this: 
+Great, but at a certain point we want to close our laptop, and everything should work remotely and reactively (scheduled, event-driven). We have to deploy our flow and we have [two options](https://docs.prefect.io/latest/concepts/deployments/#two-approaches-to-deployments) for this: 
 1) Serving flows on long-lived infrastructure: start a long-running process with the **.serve()** method in a location of choice  (often within a Docker container) that is responsible for managing all of the runs for the associated deployment(s). The process stays in communication with Prefect API and monitors and executes each flow run. It is simple, fast and the user has maximum control over infrastructure, but since it is a long running process, it is more costly since infrastructure must run the whole time.
-2) Dynamically provisioning infrastructure with workers: **.deploy()** a flow to a work pool and then a worker will pick it up to execute the flow run on your infrastructure. In pull work pools you need to set up and maintain your own worker (but we will use the new push work pool feature). The infrastructure is ephemeral and dynamically provisioned, which allows to essentially "scale to zero" when nothing is running. On the other hand, it is a more complex approach since a worker has more components and may be more difficult to set up and understand.
+2) Dynamically provisioning infrastructure with workers: **.deploy()** a flow to a work pool and then a worker will pick it up to execute the flow run on your infrastructure. In pull work pools you need to set up and maintain your own worker, but using a push work pool, Prefect cloud automatically handles the submission of scheduled jobs to our serverless infrastructure. The infrastructure is ephemeral and dynamically provisioned, which allows to essentially "scale to zero" when nothing is running. On the other hand, it is a more complex approach since a worker has more components and may be more difficult to set up and understand.
 
 We will opt for the second approach and deploy() our flow to run serverless, which has recently become much easier with the Prefect push work pools, which do not need a seperate worker process running. However, since we are using multiple frameworks here, we must first complete the following prerequisites.
 
@@ -266,7 +266,7 @@ We will opt for the second approach and deploy() our flow to run serverless, whi
 > **_NOTE:_** unfortunately it takes some time until the ENTSO-E access is granted, but in the meantime you may want to get familiar with all the other frameworks and resources
 ### Prefect
 - To run a prefect flow, you have to [install](https://docs.prefect.io/latest/getting-started/installation/) Prefect locally, you may want to consider to pip install into a [virtual environment].
-- Sign up for [Prefect Cloud]: if you want to run prefect flows only locally, you do not need to sign up. But as soon as you want to leverage deployments, scheduling, prefect blocks, etc., you need a cloud workspace where you can additionally watch your flow runs in action.
+- Sign up for [Prefect Cloud]: if you want to run prefect flows only locally or on a seld-hosted version of the open source Prefect server you do not need to sign up. But as soon as you want to leverage workspaces, event-driven capabilities, webhooks, etc., you need a cloud workspace where you can additionally watch your flow runs in action.
 - [Authenticate with Prefect Cloud]
 - Create some Prefect Blocks in the Prefect Cloud UI as shown [here](https://medium.com/the-prefect-blog/supercharge-your-python-code-with-blocks-ca8a58128c55):
     - a String Block, where you deposit the email address of a test user (you can omit this step if you are using a database where your "registered users" are persisted)
@@ -444,7 +444,7 @@ As you might have recognized, the GitHub Action has 2 jobs, first it creates the
 
 ![success github action](./images/success_gh_action.png)
 
-The webhook and automation are now alive and are waiting for incoming data/ events. You may want to look into the automations' events to proove this, since our last GitHub step emitted a simulated event, the Prefect automation was already triggered with some mocked data and we should have received our first newsletter (with mocked data).
+The webhook and automation are now alive and are waiting for incoming data/ events. You may want to look into the automations' events to prove this, since our last GitHub step emitted a simulated event, the Prefect automation was already triggered with some mocked data and we should have received our first newsletter (with mocked data).
 The next (and final) step is to find the webhooks url in Prefect Cloud UI. You need to copy the url and create a [Subscription] Channel on ENTSO-E platform. Now subscribe for a specific ENTSO-E web service (for example for "Generation Forecasts for Wind and Solar" or "Actual Generation per Production Type", the latter arrives every hour while the forecast will be sent only once a day; you may want to select your country and the generation types of interest) by clicking the button directly above the desired diagram on ENTSO-E transparency platform:   
 
 ![entsoe subscription](./images/entso-e_subscription.png)
